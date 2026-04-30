@@ -1,0 +1,66 @@
+default_language_version:
+  python: python3.11
+
+exclude: |
+  (?x)^(
+    site/|
+    \.venv/|
+    venv/|
+    docs/_build/|
+    dist/|
+    build/
+  )
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.1
+    hooks:
+      # 1. Ruff linting + autofix (includes import sorting)
+      - id: ruff
+        args: ["--fix"]
+        stages: [pre-commit]
+
+      # 2. Ruff formatter (Black-equivalent)
+      - id: ruff-format
+        stages: [pre-commit]
+
+  # Fix common whitespace issues
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+  # ADR index build
+  - repo: local
+    hooks:
+      - id: adr-index
+        name: Generate ADR & RFC Index
+        entry: python scripts/generate_index.py
+        language: system
+        files: ^docs/architecture/adr/.*\.md$|^scripts/generate_index\.py$|^docs/architecture/adr/index\.md$ |^docs/rfc/index\.md$
+        pass_filenames: false
+        stages: [ pre-commit ]
+
+  # Markdown formatting
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        exclude: ^(CONTRIBUTING\.md|docs/architecture/adr/index\.md |docs/rfc/index\.md)$
+        additional_dependencies:
+          - mdformat-gfm==0.3.6
+  # Spell checking (codespell)
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        args: [ "--config", ".codespellrc" ]
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.13.9
+    hooks:
+      - id: commitizen
+        stages: [ commit-msg ]

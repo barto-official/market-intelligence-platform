@@ -1,0 +1,89 @@
+# CODEOWNERS
+# ----------
+# This file defines who is responsible for reviewing changes to which parts of the codebase.
+# Patterns are matched top-to-bottom and the LAST matching pattern wins.
+#
+# Owners must be GitHub users or teams, prefixed with @, e.g.:
+#   @username
+#   @your-org/team-name
+#
+# Recommended location: .github/CODEOWNERS
+
+
+# --------------------------------------------------------------------
+# Global default owner (fallback for everything not matched below)
+# --------------------------------------------------------------------
+*       @barto-official
+
+
+# --------------------------------------------------------------------
+# EXAMPLES (COMMENTED) — UNCOMMENT/ADAPT AS NEEDED
+# --------------------------------------------------------------------
+# The examples below are commented out so the file is valid as-is.
+# Uncomment and customize when you need them.
+
+## Top-level directories
+## ----------------------
+## Backend code ownership (entire backend/ directory)
+# backend/                @your-org/backend-team
+
+## Frontend code ownership (entire frontend/ directory)
+# frontend/               @your-org/frontend-team
+
+## Infrastructure / DevOps ownership (infra/ directory)
+# infra/                  @your-org/infra-team
+
+
+## Subdirectories / Domains
+## ------------------------
+## Payments domain inside backend
+# backend/payments/       @your-org/payments-team
+
+## User domain inside backend
+# backend/user/           @your-org/user-team
+
+## Notifications domain (multiple teams owning together)
+# backend/notifications/  @your-org/notifications-team @your-org/platform-team
+
+
+## Per-file ownership
+## ------------------
+## Critical pipeline configuration
+# /pyproject.toml         @your-org/backend-team
+
+## CI workflows
+# /.github/workflows/ci.yml        @your-org/infra-team
+# /.github/workflows/deploy.yml    @your-org/infra-team @your-org/security-team
+
+## Shared API schema file
+# /schemas/api/v1/public.json      @your-org/api-review-board @your-org/platform-team
+
+
+## Pattern-based ownership (globs)
+## --------------------------------
+## All Python files anywhere in the repo
+# *.py                   @your-org/python-guild
+
+## All YAML files under .github/ (workflows, config)
+# .github/*.yml          @your-org/infra-team
+
+## All JSON schema files under schemas/ at any depth
+# schemas/**/*.json      @your-org/platform-team
+
+## All frontend React components
+# frontend/**/*.tsx      @your-org/frontend-team
+
+
+## Overrides / Special cases
+## -------------------------
+## Remember: the LAST matching rule in this file takes precedence.
+## You can use this to override broad rules with more specific ones.
+
+## Example:
+## 1) All backend files go to backend team:
+# backend/               @your-org/backend-team
+## 2) But payments subdirectory has its own dedicated owners:
+# backend/payments/      @your-org/payments-team
+
+## In that case, changes under backend/payments/ will be owned by @your-org/payments-team,
+## even though they also match the broader backend/ rule above.

@@ -1,0 +1,40 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Python
+[*.py]
+indent_size = 4
+# This is advisory for editors; Ruff’s line-length should be set in pyproject.toml too.
+max_line_length = 88
+
+# TOML
+[*.toml]
+indent_size = 2
+
+# YAML
+[*.yml]
+indent_size = 2
+[*.yaml]
+indent_size = 2
+
+# JSON
+[*.json]
+indent_size = 2
+
+# Markdown: preserve trailing whitespace (often used for line breaks)
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# --------------------------------------------
+# Makefiles require tabs
+# --------------------------------------------
+[Makefile]
+indent_style = tab

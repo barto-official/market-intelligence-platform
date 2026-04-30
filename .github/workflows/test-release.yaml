@@ -1,0 +1,101 @@
+# Upload to Test PyPI on PRs (same-repo) and pushes to main, then verify install
+# with Test PyPI as primary index and PyPI as extra (for transitive dependencies).
+# Use PEP 440 development versions (0.2.0.devRUN_ID) — PyPI/Test PyPI reject +local in uploads.
+# Do not set env vars with prefix PIP_* here: pip maps them to CLI flags (e.g. PIP_VERSION).
+# Configure a Trusted Publisher on https://test.pypi.org for this workflow file.
+
+name: Test PyPI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: test-pypi-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  DIST_NAME: my-package-test-0426
+
+jobs:
+  publish-and-verify:
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
+        with:
+          version: "0.11.7"
+
+      - name: Set deterministic build environment
+        shell: bash
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C.UTF-8" >> "$GITHUB_ENV"
+          echo "LANG=C.UTF-8" >> "$GITHUB_ENV"
+
+      - name: Compute unique pre-release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(uv version --short)"
+          # .devN is a development release (no +local). github.run_id is unique per workflow run.
+          V="${BASE}.dev${{ github.run_id }}"
+          {
+            echo "version=${V}"
+            echo "BUILD_VERSION=${V}" >> "$GITHUB_ENV"
+          } >> "$GITHUB_OUTPUT"
+          echo "Build version: ${V}"
+
+      - name: Apply build version
+        run: |
+          uv version "${{ steps.version.outputs.version }}" --frozen
+
+      - name: Clean and build
+        run: |
+          rm -rf dist build *.egg-info
+          uv build
+
+      - name: Check distributions
+        run: |
+          uv run --with twine==6.1.0 twine check --strict dist/*
+
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+      - name: Install from Test PyPI (verify)
+        env:
+          PACKAGE_VERSION: ${{ env.BUILD_VERSION }}
+        run: |
+          set -euo pipefail
+          python -m venv .testpypi-venv
+          .testpypi-venv/bin/python -m pip install --upgrade pip
+          .testpypi-venv/bin/pip install \
+            --index-url "https://test.pypi.org/simple/" \
+            --extra-index-url "https://pypi.org/simple/" \
+            "${{ env.DIST_NAME }}==${PACKAGE_VERSION}"
+
+      - name: Import and version check
+        env:
+          EXPECT_VERSION: ${{ env.BUILD_VERSION }}
+        run: |
+          set -euo pipefail
+          .testpypi-venv/bin/python -c "import os; from importlib.metadata import version; import my_package_test_0426; assert version('${{ env.DIST_NAME }}') == os.environ['EXPECT_VERSION']"

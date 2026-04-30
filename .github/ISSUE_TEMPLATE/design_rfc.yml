@@ -1,0 +1,31 @@
+name: "Design / RFC"
+description: "Propose and discuss a significant design or architectural change"
+title: "[RFC] <Number>-<short-title>"
+labels: ["type:design", "type:rfc"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+              Please create an RFC using the template in
+              [docs/rfc](https://github.com/ORG/REPO/tree/main/docs/rfc).
+
+              In this Issue, please link your file.
+
+              See the [RFC guidelines](docs/rfc/README.md) for details.
+  - type: textarea
+    id: summary
+    attributes:
+      label: "1. Summary"
+      description: "One or two sentences describing the proposal at a high level."
+      placeholder: "Introduce a dedicated rate-limiting service to decouple throttling from the API gateway."
+    validations:
+      required: true
+  - type: textarea
+    id: file_link
+    attributes:
+      label: "2. Link to RFC File"
+      description: "."
+    validations:
+      required: true

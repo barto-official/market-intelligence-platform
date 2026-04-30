@@ -1,0 +1,119 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		// -------------------------------------------
+		// PYTHON LINTING, FORMATTING, AND TESTING
+		// -------------------------------------------
+        "python.linting.enabled": false,
+		"python.terminal.activateEnvironment": true,
+		"python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+
+		// Prefer creating/using .venv inside the repo (works well with uv/poetry/pip)
+		"python.venvPath": ".",
+		// Show type issues early, but avoid scanning the entire world too aggressively
+  		"python.analysis.diagnosticMode": "workspace",
+
+		// Helps with large workspaces (improves responsiveness)
+		"python.analysis.indexing": true,
+		"python.analysis.diagnosticSeverityOverrides": {
+			"reportMissingImports": "warning",
+			"reportMissingTypeStubs": "warning"
+		},
+
+        "ruff.enable": true,
+        "ruff.format.enable": true,
+      	"editor.formatOnPaste": false,
+	  	"notebook.formatOnSave.enabled": true,
+		// --- Formatting control ---
+		"editor.codeActionsOnSave": {
+		    "source.fixAll.ruff": false,
+			"source.organizeImports": "explicit"
+		},
+		"ruff.fixAll": true,
+		"python.analysis.typeCheckingMode": "standard",
+		// --- Testing ---
+		"python.testing.pytestEnabled": true,
+		"python.testing.unittestEnabled": false,
+
+		// -------------------------------------------
+		// IMPORT SORTING CONTROL
+		// -------------------------------------------
+
+		// Disable VS Code’s built-in import sorter.
+		// (Ruff handles import sorting via lint fixes)
+
+
+		// --- Search and noise ---
+		"files.exclude": {
+		  "**/__pycache__": true,
+		  "**/.mypy_cache": true,
+		  "**/.ruff_cache": true,
+		  "**/.venv": true,
+		},
+		"python.missingPackage.severity": "Warning",
+
+        // Do not set a global default formatter (avoid Ruff being used for non-Python files)
+        "[python]": {
+            "editor.defaultFormatter": "charliermarsh.ruff",
+			"editor.formatOnSave": true
+        },
+        "[json]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[javascript]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[css]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[scss]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+		// Optional: Set Pylance as language server.
+		"python.languageServer": "Pylance",
+		"jupyter.kernels.excludePythonEnvironments": [
+			""
+		  ],
+
+		// -----------------------------
+		// Git & GitHub
+		// -----------------------------
+		"git.enableSmartCommit": false, // prevents committing without reviewing staged changes properly
+		"git.confirmSync": true,
+		"git.autofetch": true,
+		"git.autofetchPeriod": 180,
+    	"git.pullRebase": true,
+
+		// Avoid noisy diffs and accidental whitespace-only churn
+		"diffEditor.ignoreTrimWhitespace": false,
+
+		// Encourage meaningful diffs
+		"scm.diffDecorations": "all",
+
+		// Keep working tree status accurate in large repos
+		"git.statusLimit": 10000,
+
+		"githubPullRequests.pullBranch": "never",
+
+		// Files
+		"files.eol": "\n",
+		"files.insertFinalNewline": true,
+		"files.trimFinalNewlines": true,
+		"files.trimTrailingWhitespace": true,
+		"todohighlight.include": [
+			"**/*.js",
+			"**/*.jsx",
+			"**/*.ts",
+			"**/*.tsx",
+			"**/*.html",
+			"**/*.php",
+			"**/*.css",
+			"**/*.scss",
+			"**/*.py",
+		]
+	}
+}

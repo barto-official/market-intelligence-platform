@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "test: hello world",
+        "type": "shell",
+        "command": "echo",
+        "args": ["hello world"],
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared",
+          "clear": true
+        }
+      }
+    ]
+  }

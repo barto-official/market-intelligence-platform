@@ -1,0 +1,21 @@
+[codespell]
+# If enabled, codespell also checks file names for typos. Leave empty if not needed.
+check-filenames =
+#If enabled, codespell scans hidden files/folders
+check-hidden =
+
+# Files/dirs you typically don't want to scan
+skip =
+  .git,
+  .venv,
+  venv,
+  build,
+  dist,
+  site,
+  docs/site,
+  .mypy_cache,
+  .ruff_cache
+
+# Optional: maintain a project allowlist as you encounter domain words/names
+# Create a file like `.codespell-words.txt` and add: ignore-words = .codespell-words.txt
+# ignore-words = .codespell-words.txt

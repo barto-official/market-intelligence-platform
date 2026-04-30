@@ -1,0 +1,75 @@
+name: "Feature Request"
+description: "Suggest a new feature or enhancement"
+title: "[Feature] <short-title>"
+labels: ["type:feature"]
+assignees: []
+
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: "1. Summary"
+      description: "One or two sentences describing the feature."
+      placeholder: "Add rate limiting to public API endpoints to prevent abuse."
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: "2. Problem / Motivation"
+      description: "What problem or user need does this feature address?"
+      placeholder: |
+        Describe the user/system pain point.
+        Who is affected?
+        Why is the current behavior insufficient?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: "3. Proposed Solution (High-Level)"
+      description: "Describe your proposed solution at a high level — APIs, flows, UX, etc."
+      placeholder: |
+        Brief description of the approach.
+        Mention alternative solutions if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: "4. Scope and Impact"
+      description: |
+        Define the scope and expected impact:
+        - Which services/components are affected?
+        - Backward compatibility?
+        - Perf/reliability/security impact?
+      placeholder: "Describe which parts of the system this affects."
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: "5. Acceptance Criteria"
+      description: "Clear, testable conditions for 'done'."
+      placeholder: |
+        - [ ] Requests above 100/min receive 429
+        - [ ] Metrics are exposed in Prometheus
+        - [ ] Documentation updated
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: "6. Additional Context"
+      description: "Add diagrams, references, related issues, or supplemental information."
+      placeholder: |
+        - Related issues: #123
+        - Links to design docs
+        - External references
+    validations:
+      required: false

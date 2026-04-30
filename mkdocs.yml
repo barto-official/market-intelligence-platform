@@ -1,0 +1,129 @@
+site_name: Your Package
+site_description: Project documentation
+repo_url: "REPO_URL"
+repo_name: "YOUR_REPO"
+edit_uri: "uri" # e.g., "edit/main/docs/"
+
+theme:
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default # slate for dark mode
+      primary: indigo # color of the top nav bar
+      accent: indigo # color of buttons and links
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: deep purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+
+  name: material
+  font:
+    text: Roboto
+    code: Roboto Mono
+  language: en
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  features:
+    - navigation.tabs # enable top navigation tabs
+    - navigation.sections # enable section navigation in the sidebar
+    - navigation.path # enable breadcrumb navigation
+    - navigation.indexes
+    - navigation.top # enable "back to top" button
+    - navigation.tracking #URL in the address bar is updated with the active anchor as highlighted in the table of contents
+    #- navigation.instant # enable instant loading for internal links. You must set site_url when using instant navigation
+    - navigation.instant.prefetch # prefetch pages when user hovers over links
+    - navigation.instant.progress # progress bar for loading the page
+    - content.code.copy
+    - toc.follow # highlight the current section in the table of contents
+    - toc.integrate # integrate the table of contents into the sidebar (right side)
+    - search.highlight
+    - search.suggest
+    - search.share
+    - content.action.edit # "Edit on GitHub" link
+    - content.action.view
+
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - footnotes
+  - tables
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+
+plugins:
+  - search                     # Enables MkDocs built-in full-text search
+  - autorefs                   # Automatically creates cross-references for headings and objects
+  - mkdocstrings:              # Plugin for generating documentation from docstrings
+      handlers:
+        python:                # Use the Python handler for Python source code
+          options:
+              docstring_style: google          # Parse docstrings written in Google style
+              show_source: true                # Display a link or block showing the source code
+              show_root_heading: true          # Render a heading for the documented root object
+              show_root_full_path: false       # Do not display the full module path in the root heading
+
+              # Rendering consistency
+              heading_level: 2                 # Base heading level used for generated sections
+              separate_signature: true         # Render function/class signatures on a separate line
+              show_signature_annotations: true # Include type annotations in signatures
+              signature_crossrefs: true        # Enable cross-references inside type annotations
+
+              # Member rendering controls
+              members: true               # Render class and module members
+              members_order: source            # Order members as they appear in the source file
+              filters:
+                - "!^_"                        # Exclude members whose names start with "_" (private)
+              inherited_members: false         # Do not include inherited members from base classes
+              # Docstring content control
+              show_if_no_docstring: false        # Hide undocumented members
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: date
+      fallback_to_build_date: true
+  # Show git committers of the code. Requires git-committers plugin installation and Github Token.
+  # Alternative: mkdocs-git-authors-plugin
+  #- git-committers:
+  #    repository: squidfunk/mkdocs-material
+  #    branch: main
+  - redirects:
+      redirect_maps: { }
+  - minify:
+      minify_html: true
+
+nav:
+  - Home: index.md
+  - Guides:
+      - Getting started: guides/getting_started.md
+  - Reference:
+      - Overview: reference/index.md
+      - my_package: reference/my_package.md
+
+validation:
+  nav:
+    omitted_files: warn
+    absolute_links: warn
+  links:
+    anchors: warn
+    absolute_links: warn
+    unrecognized_links: warn

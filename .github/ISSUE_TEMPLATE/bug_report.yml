@@ -1,0 +1,116 @@
+name: "Bug Report"
+description: "Report a defect or unexpected behavior in the system"
+title: "[Bug] <short-title>"
+labels: ["type:bug"]
+assignees: []
+
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: "1. Summary"
+      description: "Short description of the bug in user/system terms."
+      placeholder: "Creating a user without an email returns 500 instead of 400."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "2. Steps to Reproduce"
+      description: "Provide clear, minimal steps someone can follow to reproduce the bug."
+      placeholder: |
+        1. Call POST /users with payload:
+           {
+             \"name\": \"Alice\"
+           }
+        2. Observe response status code 500.
+        3. Check logs for NullPointerException in UserService.validateEmail.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "3. Expected Behavior"
+      description: "Describe what you expected to happen."
+      placeholder: "The API should return a 400 Bad Request when email is missing."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "4. Actual Behavior"
+      description: "Describe the actual result, including response codes, error messages, logs, and any anomalies."
+      placeholder: |
+        - Response: 500 Internal Server Error
+        - Message: NullPointerException in validateEmail
+        - Logs:
+          <paste logs here>
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: "5. Environment"
+      description: "Where did the bug occur?"
+      placeholder: "dev / staging / production / local"
+
+  - type: input
+    id: version
+    attributes:
+      label: "Version / Commit"
+      placeholder: "v0.3.2, SHA abc123"
+
+  - type: input
+    id: runtime
+    attributes:
+      label: "Runtime"
+      placeholder: "Python 3.11, Node 20, etc."
+
+  - type: input
+    id: os
+    attributes:
+      label: "Operating System"
+      placeholder: "Ubuntu 22.04, macOS 14, Windows 11"
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "6. Severity"
+      description: "How severe is this issue?"
+      options:
+        - Critical (blocks release, data loss, security risk)
+        - Major (core functionality broken)
+        - Minor (non-critical defect)
+        - Cosmetic (UI/UX issue)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: workaround
+    attributes:
+      label: "Workaround Available?"
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "7. Logs / Screenshots"
+      description: "Paste logs, error messages, or screenshots. Redact sensitive data."
+      placeholder: |
+        ```text
+        <logs here>
+        ```
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "8. Additional Context"
+      description: "Anything else relevant: related issues, recent code changes, incident links, notes."

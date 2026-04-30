@@ -1,0 +1,335 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13" ]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
+        with:
+          version: "0.11.7"
+
+      - name: Sync test dependencies
+        run: |
+          uv sync --frozen --group dev
+
+      - name: Run tests
+        run: |
+          uv run pytest
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
+
+      - name: Sync dev dependencies
+        run: |
+          uv sync --frozen --group dev
+
+      - name: Run mypy
+        run: |
+          uv run mypy src
+
+  package-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
+
+      - name: Clean previous build artifacts
+        run: |
+          rm -rf dist build *.egg-info
+
+      - name: Set deterministic build environment
+        shell: bash
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C.UTF-8" >> "$GITHUB_ENV"
+          echo "LANG=C.UTF-8" >> "$GITHUB_ENV"
+
+      - name: Build wheel and sdist
+        run: |
+          uv build
+
+      - name: Show built artifacts
+        run: |
+          ls -lh dist/
+
+      - name: Verify artifact set
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          wheels=(dist/*.whl)
+          sdists=(dist/*.tar.gz)
+
+          if [ "${#wheels[@]}" -ne 1 ]; then
+            echo "Packaging check failed: expected exactly one wheel."
+            echo "Found ${#wheels[@]} wheel(s)."
+            printf '%s\n' "${wheels[@]:-<none>}"
+            exit 1
+          fi
+
+          if [ "${#sdists[@]}" -ne 1 ]; then
+            echo "Packaging check failed: expected exactly one sdist."
+            echo "Found ${#sdists[@]} source distribution(s)."
+            printf '%s\n' "${sdists[@]:-<none>}"
+            exit 1
+          fi
+
+          echo "Artifacts look correct."
+          echo "Wheel: ${wheels[0]}"
+          echo "sdist: ${sdists[0]}"
+
+      - name: Inspect wheel contents
+        run: |
+          unzip -l dist/*.whl
+
+      - name: Inspect sdist contents
+        run: |
+          tar -tzf dist/*.tar.gz
+
+      - name: Validate package metadata and README rendering
+        run: |
+          uv run --with twine==6.1.0 twine check --strict dist/*
+
+      - name: Upload built distributions
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: built-distributions
+          path: dist/*
+
+  artifact-smoke-test:
+    runs-on: ubuntu-latest
+    needs: package-build
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Download built distributions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: built-distributions
+          path: dist
+      - name: Show downloaded artifacts
+        run: |
+          ls -lh dist/
+      - name: Create clean virtual environment
+        run: |
+          python -m venv .smoke-venv
+      - name: Install built wheel into clean environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          if [ "${#wheels[@]}" -ne 1 ]; then
+            echo "Expected exactly 1 wheel, found ${#wheels[@]}"
+            printf '%s\n' "${wheels[@]:-<none>}"
+            exit 1
+          fi
+          .smoke-venv/bin/python -m pip install --upgrade pip
+          .smoke-venv/bin/python -m pip install "${wheels[0]}"
+      - name: Smoke test import
+        run: |
+          .smoke-venv/bin/python -c "import my_package_test_0426"
+      - name: Smoke test installed metadata
+        run: |
+          .smoke-venv/bin/python -c "from importlib.metadata import version; print(version('my-package-test-0426'))"
+      - name: Smoke test basic public API
+        run: |
+          .smoke-venv/bin/python -c "import my_package_test_0426; print(getattr(my_package_test_0426, '__version__', 'no __version__ attribute'))"
+
+  sdist-smoke-test:
+    runs-on: ubuntu-latest
+    needs: package-build
+
+    steps:
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Download built distributions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: built-distributions
+          path: dist
+
+      - name: Show downloaded artifacts
+        run: |
+          ls -lh dist/
+
+      - name: Create clean virtual environment
+        run: |
+          python -m venv .sdist-venv
+
+      - name: Install source distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          sdists=(dist/*.tar.gz)
+
+          if [ "${#sdists[@]}" -ne 1 ]; then
+            echo "Expected exactly 1 sdist, found ${#sdists[@]}"
+            printf '%s\n' "${sdists[@]:-<none>}"
+            exit 1
+          fi
+
+          .sdist-venv/bin/python -m pip install --upgrade pip
+          .sdist-venv/bin/python -m pip install "${sdists[0]}"
+
+      - name: Smoke test import from sdist install
+        run: |
+          .sdist-venv/bin/python -c "import my_package_test_0426"
+
+      - name: Smoke test installed metadata from sdist install
+        run: |
+          .sdist-venv/bin/python -c "from importlib.metadata import version; print(version('my-package-test-0426'))"
+
+      - name: Show import location
+        run: |
+          .sdist-venv/bin/python -c "import my_package_test_0426; print(my_package_test_0426.__file__)"
+  editable-install-smoke-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
+
+      - name: Create clean virtual environment
+        run: |
+          python -m venv .editable-venv
+
+      - name: Install project editable
+        run: |
+          .editable-venv/bin/python -m pip install --upgrade pip
+          uv pip install --python .editable-venv/bin/python -e .
+
+      - name: Smoke test editable import
+        run: |
+          .editable-venv/bin/python -c "import my_package_test_0426"
+
+      - name: Smoke test editable installed metadata
+        run: |
+          .editable-venv/bin/python -c "from importlib.metadata import version; print(version('my-package-test-0426'))"
+
+      - name: Show editable import location
+        run: |
+          .editable-venv/bin/python -c "import my_package_test_0426; print(my_package_test_0426.__file__)"
+
+  docs-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
+
+      - name: Build docs (strict)
+        run: |
+          uv sync --frozen --group docs
+          uv run mkdocs build --strict
+
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Check links with Lychee
+        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            --no-progress
+            --verbose
+            --timeout 20
+            --max-retries 2
+            --accept 200,204,206
+            --exclude "http://localhost"
+            --exclude "http://127.0.0.1"
+            docs/**/*.md README.md
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+            fetch-depth: 0  # Fetch all history for accurate pre-commit checks
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
+
+      - name: Run pre-commit (all files)
+        run: |
+          uv sync --frozen --group dev --group docs
+          uv run pre-commit run --all-files
+
+  adr-rfc-index-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate ADR & RFC index
+        run: |
+          python scripts/generate_index.py
+
+      - name: Fail if INDEX changed
+        run: |
+          if ! git diff --exit-code; then
+            echo "ADR & RFC indices are stale. Run: python scripts/generate_index.py and commit the result."
+            git diff
+            exit 1
+          fi

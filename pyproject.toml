@@ -1,0 +1,205 @@
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12"]
+build-backend = "uv_build"
+
+[project]
+requires-python = ">=3.11"
+name = "PROJECT_NAME"
+version = "0.1.0"
+description = "PROJECT_DESCRIPTION"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]authors = [ { name = "Bartosz Rzycki", email = "bartosz.rzycki@gmail.com" }, ]
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourname/my-package"
+Repository = "https://github.com/yourname/my-package"
+Documentation = "https://your-docs-site"
+Issues = "https://github.com/yourname/my-package/issues"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "pytest>=8.2",
+    "codespell>=2.3",
+    "pre-commit>4.0",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.25",
+    "pymdown-extensions>=10.8",
+    "mkdocs-autorefs>=1.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.2",
+    "mkdocs-git-committers-plugin-2>=2.0",
+    "mkdocs-minify-plugin>=0.8",
+    "mkdocs-redirects>=1.2",
+    "mike>=2.1",
+    "mdformat>=0.7",
+    "mdformat-gfm>=0.3",
+]
+[tool.uv.build-backend]
+source-include = ["tests/**"]
+wheel-exclude = ["tests/**"]
+
+#if using setuptools
+#[tool.setuptools]
+#package-dir = {"" = "src"}
+#packages = ["my_package"] if you want manual package discovery
+#[tool.setuptools.packages.find]
+#where = ["src"]
+
+################################################################################
+# RUFF CONFIGURATION
+################################################################################
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+exclude = [
+    ".venv",
+    "venv",
+    ".mypy_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    "docs/_build",
+]
+
+
+################################################################################
+# LINTING RULES
+################################################################################
+[tool.ruff.lint]
+preview = true
+# Categories to enable (production-ready balance)
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes (undefined names, unused vars/imports)
+    "B",      # flake8-bugbear (likely bugs)
+    "I",      # import sorting (isort)
+    "UP",     # pyupgrade (modern Python idioms)
+    "C90",    # complexity (McCabe)
+    "PL",     # selected Pylint rules
+    "DTZ",    # datetime safety
+    "PTH",    # pathlib correctness
+]
+
+extend-select = [
+    # -------------------------------------------------------------------------
+    # Docstring presence (public API)
+    # -------------------------------------------------------------------------
+    "D100", # public module
+    "D101", # public class
+    "D102", # public method
+    "D103", # public function
+    #"D104", # public package (__init__.py)
+
+    # -------------------------------------------------------------------------
+    # Optional but useful. Remove if too much friction.
+    # -------------------------------------------------------------------------
+    "D205", # blank line between summary and description
+    "D212", # multi-line docstring summary should start on the first line
+    "D300", # triple double quotes
+    "D400", # period at end of summary
+    "D401", # Imperative mood,
+
+    # Stable completeness (pydocstyle)
+    #"D417",
+
+     # -------------------------------------------------------------------------
+    # Preview pydoclint-derived rules. Feel free to remove them.
+    # -------------------------------------------------------------------------
+    #"DOC101",# not yet implemented
+     "DOC102",
+    #"DOC104", #not yet implemented
+    "DOC201", # missing attribute docstring
+    "DOC501", # missing parameter type
+    "DOC502", # missing return type
+]
+
+# Ignore overly strict or noisy rules used by many teams
+ignore = [
+    # STRUCTURAL RULES (too strict for many teams)
+    "PLR2004",   # magic values
+    "PLR0913",   # too many arguments (tests, constructors often exceed)
+    "PLR0917",   # too many positional args
+
+    # Occasionally noisy patterns
+    "B019",  # functools.lru_cache uses per-instance function identity
+]
+
+# Automatically apply fixes for safe rules
+fixable = ["ALL"]
+unfixable = []
+
+################################################################################
+# DOCSTRING RULES (Google-style recommended)
+################################################################################
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Ignore docstring checks for specific decorators (common: overloads)
+ignore-decorators = [
+    "typing.overload",
+    "typing_extensions.overload",
+]
+
+# Do not require documenting *args/**kwargs
+ignore-var-parameters = true
+
+# In case of custom property-like decorators, declare them here
+property-decorators = [
+    # Example placeholder:
+    # "your_package.decorators.cached_property",
+]
+################################################################################
+# COMPLEXITY RULES
+################################################################################
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+################################################################################
+# PER-FILE EXCEPTIONS
+################################################################################
+[tool.ruff.lint.per-file-ignores]
+# Test files may violate docstring rules, magic numbers, and signature rules
+"tests/**" = ["D", "PLR2004", "PLR0913"]
+
+# __init__ often re-exports modules, leading to unused imports
+"**/__init__.py" = ["F401"]
+
+"scripts/**" = ["D"]
+"migrations/**" = ["D"]
+"alembic/**" = ["D"]
+
+################################################################################
+# FORMATTER SETTINGS
+################################################################################
+[tool.ruff.format]
+# Match Black's philosophy, but configurable if needed.
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# Enable "magic trailing comma" behavior to achieve stable multi-line formatting.
+skip-magic-trailing-comma = false
+
+# Normalize docstring quotes
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["my_package"]
+
+[tool.mdformat]
+wrap = 100
+number = true
