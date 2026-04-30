@@ -1,14 +1,14 @@
 # ADR 0003: Strategic Domain-Driven Design for Market Intelligence Platform
 
-| Metadata          | Value                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------- |
-| **Date**          | 2026-04-30                                                                                              |
-| **Author**        | @barto-official                                                                                         |
-| **Status**        | `Proposed`                                                                                              |
-| **Tags**          | architecture, ddd, strategic-design, bounded-contexts                                                   |
+| Metadata          | Value                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Date**          | 2026-04-30                                                                                                    |
+| **Author**        | @barto-official                                                                                               |
+| **Status**        | `Proposed`                                                                                                    |
+| **Tags**          | architecture, ddd, strategic-design, bounded-contexts                                                         |
 | **Related**       | `docs/architecture/adr/0001-record-architecture-decisions.md`, `docs/architecture/adr/0002-system-context.md` |
-| **Supersedes**    | N/A                                                                                                     |
-| **Superseded by** | N/A <br/>                                                                                               |
+| **Supersedes**    | N/A                                                                                                           |
+| **Superseded by** | N/A <br/>                                                                                                     |
 
 # Background
 
@@ -109,11 +109,10 @@ Strategic DDD is the best fit because the platform’s complexity comes from bus
 ### High-level Plan
 
 1. Define initial bounded contexts and their responsibilities for phase-one scope.
-2. Publish and adopt ubiquitous language across docs, APIs, and schema naming.
-3. Introduce context contracts carrying freshness, quality, and provenance semantics.
-4. Align backlog ownership and acceptance criteria to context boundaries.
-5. Validate boundaries against the business workflows captured in this ADR.
-
+1. Publish and adopt ubiquitous language across docs, APIs, and schema naming.
+1. Introduce context contracts carrying freshness, quality, and provenance semantics.
+1. Align backlog ownership and acceptance criteria to context boundaries.
+1. Validate boundaries against the business workflows captured in this ADR.
 
 ## 5) Revisit Triggers
 
@@ -126,8 +125,7 @@ This decision should be revisited if any of the following occur:
 - Provider landscape changes force major anti-corruption redesign.
 - Cost/performance constraints require significant context consolidation or re-segmentation.
 
-
----
+______________________________________________________________________
 
 # Background
 
@@ -154,20 +152,21 @@ The domain explicitly excludes broker-dealer functionality, guaranteed-return po
 ### Capabilities
 
 1. Historical market data acquisition & management
-2. Real-Time market data acquisition & management
-3. Geopolitical Events data acquisition & management
-4. Watchlist and portfolio management
-5. Market data presentation and analytics
-6. User identity and access
-7. Recommendation, Prediction, forecast and of market event and prices
-8. Impact Assessment
-9. Portfolio-aware insight generation
+1. Real-Time market data acquisition & management
+1. Geopolitical Events data acquisition & management
+1. Watchlist and portfolio management
+1. Market data presentation and analytics
+1. User identity and access
+1. Recommendation, Prediction, forecast and of market event and prices
+1. Impact Assessment
+1. Portfolio-aware insight generation
 
 ### Business Workflows
 
 #### Workflow #1: Create and Maintain Watchlist
 
 Actors:
+
 - Authenticated Investor
 - Market Intelligence Platform
 - Asset Registry
@@ -176,22 +175,25 @@ Actors:
 Trigger: The investor wants to track assets they care about without entering full portfolio positions.
 
 Main path:
+
 1. Investor signs in.
-2. Investor creates a watchlist or opens an existing watchlist.
-3. Investor searches for an asset by symbol, name, exchange, or supported identifier.
-4. Platform returns matching supported assets.
-5. Investor selects the correct asset.
-6. Platform adds the asset to the selected watchlist.
-7. Platform displays the asset in the watchlist with available price, basic metrics, and freshness/quality status.
-8. Investor may remove assets, reorder assets, or maintain multiple watchlists later.
+1. Investor creates a watchlist or opens an existing watchlist.
+1. Investor searches for an asset by symbol, name, exchange, or supported identifier.
+1. Platform returns matching supported assets.
+1. Investor selects the correct asset.
+1. Platform adds the asset to the selected watchlist.
+1. Platform displays the asset in the watchlist with available price, basic metrics, and freshness/quality status.
+1. Investor may remove assets, reorder assets, or maintain multiple watchlists later.
 
 Alternative paths:
+
 - Investor adds an asset to a default watchlist without explicitly creating one.
 - Investor creates multiple watchlists for different strategies or themes.
 - Investor removes an asset from the watchlist.
 - Platform groups assets in themes and recommends to the user a theme based on his interests.
 
 Failure paths:
+
 - Asset is unsupported.
 - Asset search returns ambiguous symbols across exchanges.
 - Asset is already in the watchlist.
@@ -239,6 +241,7 @@ flowchart TD
 #### Workflow: Create and Maintain Manual Portfolio
 
 Actors:
+
 - Authenticated Investor
 - Market Intelligence Platform
 - Asset Registry
@@ -247,16 +250,18 @@ Actors:
 Trigger: The investor wants to represent their actual or simulated holdings inside the platform.
 
 Main path:
+
 1. Investor opens portfolio management.
-2. Investor searches for a supported asset.
-3. Investor selects the correct asset.
-4. Investor enters position details such as quantity and, optionally, average cost.
-5. Platform validates the position input.
-6. Platform records or updates the portfolio position.
-7. Platform calculates basic current position value using available market data.
-8. Platform shows the position in the portfolio view with freshness and quality status.
+1. Investor searches for a supported asset.
+1. Investor selects the correct asset.
+1. Investor enters position details such as quantity and, optionally, average cost.
+1. Platform validates the position input.
+1. Platform records or updates the portfolio position.
+1. Platform calculates basic current position value using available market data.
+1. Platform shows the position in the portfolio view with freshness and quality status.
 
 Alternative paths:
+
 - Investor updates quantity after buying or selling outside the platform.
 - Investor removes a position.
 - Investor enters only quantity and skips average cost.
@@ -264,6 +269,7 @@ Alternative paths:
 - Investor creates a portfolio from watchlist items.
 
 Failure paths:
+
 - Asset is unsupported.
 - Quantity is invalid.
 - Average cost is invalid or incompatible with the asset currency.
@@ -311,6 +317,7 @@ flowchart TD
 **Workflow: Check Portfolio/Watchlist Market Position**
 
 Actors:
+
 - Authenticated Investor
 - Market Intelligence Platform
 - Portfolio/Watchlist Context
@@ -320,21 +327,24 @@ Actors:
 Trigger: The investor opens the platform to understand the current state of assets they care about.
 
 Main path:
+
 1. Investor signs in and opens the dashboard, portfolio view, or watchlist view.
-2. Platform loads the investor’s watchlists and/or portfolio positions.
-3. Platform retrieves latest available validated market data and selected financial metrics for the relevant assets.
-4. Platform calculates basic derived values, such as current position value and simple gain/loss where supported.
-5. Platform displays assets, positions, prices, metrics, and freshness/quality indicators.
-6. Investor reviews the current state and decides whether further investigation is needed.
-7. Investor may open an asset detail view, update a position, add/remove assets, or report a data issue.
+1. Platform loads the investor’s watchlists and/or portfolio positions.
+1. Platform retrieves latest available validated market data and selected financial metrics for the relevant assets.
+1. Platform calculates basic derived values, such as current position value and simple gain/loss where supported.
+1. Platform displays assets, positions, prices, metrics, and freshness/quality indicators.
+1. Investor reviews the current state and decides whether further investigation is needed.
+1. Investor may open an asset detail view, update a position, add/remove assets, or report a data issue.
 
 Alternative paths:
+
 - Investor checks only watchlist, not portfolio.
 - Investor checks only asset detail view.
 - Platform shows partial data with explicit quality/freshness indicators.
 - Investor uses the dashboard as a quick daily check-in rather than a deep analysis view.
 
 Failure paths:
+
 - Portfolio/watchlist cannot be loaded.
 - Market data is stale, missing, or degraded.
 - Position valuation cannot be calculated.
@@ -388,6 +398,7 @@ flowchart TD
 #### Workflow: Ingest, Normalize, and Validate Market Data
 
 Actors:
+
 - Market Intelligence Platform
 - Scheduled Job / Internal Operator
 - External Market Data Provider
@@ -398,17 +409,19 @@ Trigger:
 A scheduled ingestion run, manual backfill, or refresh request requires the platform to obtain market data for supported assets.
 
 Main path:
+
 1. Platform determines which supported assets require data.
-2. Platform maps internal asset identifiers to provider-specific identifiers.
-3. Platform requests price, metric, or metadata data from the external provider.
-4. Platform captures raw provider response or source snapshot.
-5. Platform normalizes provider-specific data into platform-standard market data records.
-6. Platform validates schema, completeness, duplicates, ranges, and freshness.
-7. Platform records ingestion run metadata, status, errors, source information, and processing timestamps.
-8. Platform marks market data as healthy, partial, degraded, stale, or failed.
-9. Validated data becomes available to portfolio, watchlist, asset detail, and dashboard views.
+1. Platform maps internal asset identifiers to provider-specific identifiers.
+1. Platform requests price, metric, or metadata data from the external provider.
+1. Platform captures raw provider response or source snapshot.
+1. Platform normalizes provider-specific data into platform-standard market data records.
+1. Platform validates schema, completeness, duplicates, ranges, and freshness.
+1. Platform records ingestion run metadata, status, errors, source information, and processing timestamps.
+1. Platform marks market data as healthy, partial, degraded, stale, or failed.
+1. Validated data becomes available to portfolio, watchlist, asset detail, and dashboard views.
 
 Alternative paths:
+
 - Platform performs historical backfill instead of latest-price refresh.
 - Platform partially succeeds for some assets and fails for others.
 - Platform accepts data but marks it degraded due to missing metrics.
@@ -416,6 +429,7 @@ Alternative paths:
 - Platform retries transient provider failures.
 
 Failure paths:
+
 - Provider is unavailable.
 - Provider rate limit is exceeded.
 - Provider identifier mapping is incorrect.
@@ -461,4 +475,408 @@ flowchart TD
     P -- No --> S[Investor may open asset detail, update position, or continue monitoring]
     R --> S
     S --> T[Investor has current market context with visible trust signals]
+```
+
+### Pain Points
+
+**Pain point: Ambiguous asset identity**
+
+- Workflow: Create and Maintain Watchlist; Create and Maintain Manual Portfolio
+- Description: The same ticker symbol may refer to different instruments across exchanges, providers, or asset classes.
+- Why it matters: Users may add or value the wrong asset.
+- Possible consequence: Loss of trust, incorrect portfolio valuation, incorrect future insights.
+- DDD implication: Asset, Symbol, Exchange, ProviderIdentifier, and SupportedAsset need precise language and ownership.
+
+**Pain point: Stale or degraded market data may look trustworthy**
+
+- Workflow: Check Portfolio/Watchlist Market Position
+- Description: Users may assume displayed prices and metrics are current unless freshness and quality status are explicit.
+- Why it matters: Investment decisions are time-sensitive.
+- Possible consequence: User acts on outdated or incomplete information.
+- DDD implication: Freshness, QualityStatus, and DataProvenance should be explicit domain concepts.
+
+**Pain point: Provider schema or identifier changes can break ingestion**
+
+- Workflow: Ingest, Normalize, and Validate Market Data
+- Description: External provider data formats, symbols, fields, or semantics may change.
+- Why it matters: Data pipelines can fail silently or produce incorrect normalized data.
+- Possible consequence: Incorrect data served to users.
+- DDD implication: RawProviderResponse, NormalizedMarketData, IngestionRun, and ValidationResult should be explicit concepts.
+
+**Pain point: Users need confidence without receiving financial advice**
+
+- Workflow: Check Portfolio/Watchlist Market Position; future insight workflows
+- Description: The platform must help users understand market context without implying guaranteed outcomes or regulated advice.
+- Why it matters: Finance is trust-critical and compliance-sensitive.
+- Possible consequence: Regulatory, reputational, and user-trust risk.
+- DDD implication: Separate information, insight, recommendation, and action concepts carefully.
+
+### Actors
+
+- Authenticated Investor
+- Internal Operator
+- Scheduled Ingestion Job
+- Market Data Provider
+- Market Intelligence Platform
+- Asset Registry
+- Data Quality Process
+- Authorization Mechanism
+
+### Commands / Queries
+
+- CreateWatchlist
+- RenameWatchlist
+- DeleteWatchlist
+- SearchAsset
+- AddAssetToWatchlist
+- RemoveAssetFromWatchlist
+- CreatePortfolio
+- RenamePortfolio
+- DeletePortfolio
+- AddPosition
+- UpdatePosition
+- RemovePosition
+- RunMarketDataIngestion
+- RunHistoricalBackfill
+- ResolveProviderIdentifiers
+- RequestProviderMarketData
+- CaptureRawMarketData
+- NormalizeMarketData
+- ValidateMarketData
+- CalculateFreshnessStatus
+- PublishMarketDataForServing
+- ViewDashboard
+- ViewPortfolio
+- ViewWatchlist
+- ViewAssetDetail
+- CalculatePortfolioValuation
+- ReportDataIssue
+
+### Events
+
+- WatchlistCreated
+
+- WatchlistRenamed
+
+- WatchlistDeleted
+
+- AssetSearchPerformed
+
+- AssetSearchReturned
+
+- AssetAddedToWatchlist
+
+- AssetRemovedFromWatchlist
+
+- WatchlistAssetAdditionRejected
+
+- PortfolioCreated
+
+- PortfolioRenamed
+
+- PortfolioDeleted
+
+- PositionAdded
+
+- PositionUpdated
+
+- PositionRemoved
+
+- PositionEntryRejected
+
+- MarketDataIngestionStarted
+
+- HistoricalBackfillStarted
+
+- ProviderIdentifiersResolved
+
+- ProviderIdentifierResolutionFailed
+
+- ProviderDataRequested
+
+- ProviderDataReceived
+
+- ProviderDataRequestFailed
+
+- RawMarketDataCaptured
+
+- MarketDataNormalized
+
+- MarketDataNormalizationFailed
+
+- MarketDataValidated
+
+- MarketDataValidationFailed
+
+- MarketDataMarkedHealthy
+
+- MarketDataMarkedDegraded
+
+- MarketDataMarkedStale
+
+- MarketDataPublishedForServing
+
+- MarketDataIngestionCompleted
+
+- MarketDataIngestionPartiallyCompleted
+
+- MarketDataIngestionFailed
+
+- DashboardViewed
+
+- PortfolioViewed
+
+- WatchlistViewed
+
+- AssetDetailViewed
+
+- PortfolioValuationCalculated
+
+- PortfolioValuationPartiallyCalculated
+
+- PortfolioValuationFailed
+
+- MarketPositionDisplayed
+
+- MarketPositionDisplayDegraded
+
+- DataIssueReported
+
+- DataIssueTriageStarted
+
+- DataIssueResolved
+
+### Policies
+
+- User-owned context access policy
+- Supported asset policy
+- Duplicate watchlist asset policy
+- Asset identity disambiguation policy
+- Portfolio ownership policy
+- Manual portfolio accuracy policy
+- Basic valuation policy
+- Provider identifier resolution policy
+- Raw data capture policy
+- Data normalization policy
+- Data validation policy
+- Quality status policy
+- Freshness policy
+- Publish only validated data policy
+- Retry policy
+- Partial valuation policy
+- Trust signal display policy
+- Issue feedback policy
+
+### Read Models
+
+- Watchlist Overview
+- Watchlist Detail
+- Asset Search Result
+- Portfolio Overview
+- Portfolio Position List
+- Position Detail
+- Ingestion Run Status
+- Market Data Quality View
+- Asset Market Data View
+- Provider Mapping View
+- Dashboard View
+- Portfolio Market Position View
+- Watchlist Market Position View
+- Asset Detail View
+- Data Issue Submission View
+
+### Pain Points
+
+- Ambiguous asset identity
+- Unsupported assets
+- Provider identifier mismatch
+- Provider schema changes
+- Partial ingestion success
+- Stale but technically successful data
+- Manual portfolio drift
+- Cost basis complexity
+- Corporate actions
+- Currency mismatch
+- User may overtrust degraded data
+- Portfolio valuation may be incomplete
+- Dashboard may blur facts and insights
+- User feedback may lack diagnostic context
+
+### Business Rules
+
+| ID     | Rule                                                                                | Applies To                           | Reason                                                   | Exception                         |
+| ------ | ----------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------- | --------------------------------- |
+| BR-001 | A user can only access their own investing context.                                 | Watchlists, portfolios, positions    | Financial context is private.                            | Future admin/support access.      |
+| BR-002 | Only supported assets can be added to watchlists or portfolios.                     | Watchlist, portfolio                 | Reliable data requires supported assets.                 | Future requested/custom assets.   |
+| BR-003 | Platform assets must have stable internal identities.                               | Asset registry, ingestion, portfolio | Symbols and provider IDs are ambiguous.                  | None.                             |
+| BR-004 | Provider identifiers must map unambiguously before data can be attached.            | Ingestion                            | Prevent wrong data association.                          | Ambiguous mappings go to review.  |
+| BR-005 | A watchlist asset is not a portfolio position.                                      | Watchlist, portfolio                 | Tracking and ownership differ.                           | None.                             |
+| BR-006 | A manual portfolio position is user-maintained, not broker-verified.                | Portfolio                            | Manual state can drift.                                  | Future broker sync.               |
+| BR-007 | Position quantity must be valid for the supported position model.                   | Portfolio                            | Invalid quantity creates invalid valuation.              | Future short positions.           |
+| BR-008 | Average cost is optional unless P&L is shown.                                       | Portfolio                            | Reduce friction and avoid misleading P&L.                | P&L requires cost basis.          |
+| BR-009 | Raw provider responses should be captured before normalization when feasible.       | Ingestion                            | Auditability and replay.                                 | Licensing restrictions.           |
+| BR-010 | Provider data must be normalized before product-facing use.                         | Market data serving                  | Prevent provider schema leakage.                         | Internal diagnostics.             |
+| BR-011 | Market data must pass validation or be explicitly marked degraded before serving.   | Market data serving                  | Avoid silent wrong outputs.                              | Internal/admin diagnostics.       |
+| BR-012 | Technical ingestion success does not imply business data quality.                   | Ingestion, quality                   | Data may be stale/incomplete despite successful request. | None.                             |
+| BR-013 | Freshness must be tracked separately from validity.                                 | Data quality                         | Valid data may be stale.                                 | Historical data semantics differ. |
+| BR-014 | Impossible or suspicious values must not be served as healthy data.                 | Validation                           | Prevent misleading outputs.                              | Field-specific semantics.         |
+| BR-015 | Partial ingestion success must be represented explicitly.                           | Ingestion, views                     | Avoid hiding missing data.                               | None.                             |
+| BR-016 | Portfolio valuation must distinguish complete, partial, and failed valuation.       | Portfolio view                       | Avoid misleading total value.                            | None.                             |
+| BR-017 | Portfolio valuation must not silently ignore failed positions.                      | Portfolio view                       | Excluding failed positions distorts value.               | Explicit user filtering.          |
+| BR-018 | User-facing degraded data must show quality/freshness status.                       | UI/read models                       | Trust requires visible uncertainty.                      | None.                             |
+| BR-019 | Reporting a data issue does not immediately change market data.                     | Feedback, data quality               | Reports require validation.                              | Severe confirmed incident.        |
+| BR-020 | Raw market data, calculated valuation, and future insights must be distinguishable. | Dashboard, future insights           | Avoid confusing facts with advice.                       | None.                             |
+
+### Exceptions
+
+| ID     | Failure Case                    | Workflow                 | Detection                       | Expected Handling                  | Event / Outcome                                        |
+| ------ | ------------------------------- | ------------------------ | ------------------------------- | ---------------------------------- | ------------------------------------------------------ |
+| FC-001 | Unsupported asset               | Watchlist, Portfolio     | Asset not in supported registry | Reject add/create action           | WatchlistAssetAdditionRejected / PositionEntryRejected |
+| FC-002 | Ambiguous asset identifier      | Watchlist, Portfolio     | Multiple matching assets        | Require disambiguation             | AssetSearchReturned / Addition rejected                |
+| FC-003 | Duplicate watchlist asset       | Watchlist                | Same asset_id already present   | Reject or no-op                    | WatchlistAssetAdditionRejected                         |
+| FC-004 | Unauthorized access             | All user-owned contexts  | user_id mismatch                | Reject and audit                   | AccessDenied                                           |
+| FC-005 | Invalid quantity                | Portfolio                | Quantity validation fails       | Reject position command            | PositionEntryRejected                                  |
+| FC-006 | Invalid average cost            | Portfolio                | Cost validation fails           | Reject or allow without cost       | PositionEntryRejected / PositionAdded                  |
+| FC-007 | Duplicate portfolio position    | Portfolio                | Position for same asset exists  | Reject or route to update          | PositionEntryRejected / PositionUpdated                |
+| FC-008 | Provider unavailable            | Market data ingestion    | Timeout/5xx/network error       | Retry, then mark failed/partial    | ProviderDataRequestFailed                              |
+| FC-009 | Provider rate limit exceeded    | Market data ingestion    | 429/quota response              | Delay/stop requests                | MarketDataIngestionPartiallyCompleted                  |
+| FC-010 | Missing provider mapping        | Market data ingestion    | No provider identifier          | Skip asset, record failure         | ProviderIdentifierResolutionFailed                     |
+| FC-011 | Ambiguous provider mapping      | Market data ingestion    | Multiple mappings               | Block attachment, manual review    | ProviderIdentifierResolutionFailed                     |
+| FC-012 | Provider schema changed         | Market data ingestion    | Normalization/schema failure    | Block publish, alert               | MarketDataNormalizationFailed                          |
+| FC-013 | Invalid market data value       | Market data validation   | Sanity/range check fails        | Mark failed/degraded               | MarketDataValidationFailed                             |
+| FC-014 | Stale provider data             | Market data validation   | Freshness check fails           | Mark stale/degraded                | MarketDataMarkedStale                                  |
+| FC-015 | Partial ingestion success       | Market data ingestion    | Mixed result summary            | Publish valid data, mark failures  | MarketDataIngestionPartiallyCompleted                  |
+| FC-016 | Duplicate ingestion records     | Market data ingestion    | Idempotency/unique check        | Ignore/update idempotently         | DuplicateMarketDataDetected                            |
+| FC-017 | Investing context not found     | Dashboard/view           | No portfolio/watchlist          | Show empty state                   | MarketPositionDisplayUnavailable                       |
+| FC-018 | Market data missing             | Portfolio/watchlist view | No usable data                  | Show unavailable/degraded state    | MarketPositionDisplayDegraded                          |
+| FC-019 | Portfolio valuation failed      | Portfolio view           | No calculable positions         | Show valuation unavailable         | PortfolioValuationFailed                               |
+| FC-020 | Portfolio valuation partial     | Portfolio view           | Some positions unvalued         | Show partial valuation             | PortfolioValuationPartiallyCalculated                  |
+| FC-021 | Currency conversion unsupported | Portfolio view           | Currency mismatch               | Mark valuation partial/unavailable | PortfolioValuationPartiallyCalculated                  |
+| FC-022 | User reports data issue         | Portfolio/watchlist view | User report                     | Create issue, do not mutate data   | DataIssueReported                                      |
+| FC-023 | Unknown data quality status     | Market data serving      | Missing quality metadata        | Treat as degraded/unavailable      | MarketPositionDisplayDegraded                          |
+| FC-024 | Raw storage restricted          | Ingestion/provenance     | Provider license restriction    | Store allowed provenance metadata  | ProvenanceCapturedPartially                            |
+
+Severity 1: Must block operation
+
+- Unauthorized access
+- Ambiguous provider mapping
+- Invalid market data value
+- Provider schema change
+- Unsupported asset for portfolio/watchlist in V1
+
+Severity 2: Can proceed with degraded output
+
+- Stale market data
+- Missing metrics
+- Partial ingestion
+- Partial portfolio valuation
+
+Severity 3: User/product friction
+
+- Duplicate watchlist asset
+- Empty investing context
+- Unsupported asset search demand
+- Invalid form input
+
+Severity 4: Operational/compliance concern
+
+- Provider rate limit
+- Raw storage restricted
+- Corporate action unsupported
+
+### Glossary
+
+| Term                | Meaning                                                              | Context               | Avoid Confusing With         |
+| ------------------- | -------------------------------------------------------------------- | --------------------- | ---------------------------- |
+| Investor            | User who maintains investing context and monitors market information | Product               | Broker, professional advisor |
+| Asset               | Stable internal representation of a financial instrument             | Asset Universe        | Symbol, Position             |
+| Supported Asset     | Asset covered by the platform for tracking/data                      | Asset Universe        | Any real-world asset         |
+| Symbol              | Human-readable ticker/display identifier                             | Search/UI             | Asset identity               |
+| Provider Identifier | External vendor’s identifier for an asset                            | Market Data           | Internal asset_id            |
+| Watchlist           | User-owned list of assets to monitor                                 | Portfolio & Watchlist | Portfolio                    |
+| Watchlist Item      | Association between watchlist and asset                              | Portfolio & Watchlist | Position                     |
+| Portfolio           | User-owned collection of positions                                   | Portfolio & Watchlist | Watchlist                    |
+| Position            | User-maintained holding record for an asset                          | Portfolio & Watchlist | Asset, Trade                 |
+| Quantity            | Amount of asset in a position                                        | Portfolio             | Price, Value                 |
+| Average Cost        | Optional user-provided average acquisition cost                      | Portfolio             | Verified cost basis          |
+| Current Value       | Calculated position value using price and quantity                   | Portfolio Valuation   | Raw market data              |
+| Market Data         | Provider-supplied asset prices/metrics                               | Market Data           | Portfolio data, insight      |
+| Latest Price        | Most recent available validated price                                | Market Data           | Real-time price              |
+| Financial Metric    | Selected metric such as market cap/P/E/P/S                           | Market Data           | Portfolio metric             |
+| Quality Status      | Health state of data/output                                          | Data Quality          | Freshness only               |
+| Freshness Status    | Recency state of data                                                | Data Quality          | Validity                     |
+| Ingestion Run       | One execution of data ingestion                                      | Market Data           | Dataset                      |
+| Provenance          | Evidence of source and transformation history                        | Data Governance       | Logging only                 |
+| Data Issue          | Reported or detected data correctness problem                        | Feedback              | Confirmed defect             |
+| Domain Event        | Meaningful fact inside platform/domain workflow                      | DDD                   | Market Event                 |
+| Market Event        | External event that may affect markets/assets                        | Future Intelligence   | Domain Event                 |
+| Insight             | Explanation of why something may matter                              | Future Intelligence   | Recommendation               |
+| Recommendation      | Suggested action/configuration                                       | Future Automation     | Insight                      |
+
+### Subdomain
+
+| Subdomain                             | Description                                                                                                   | Business Importance |  Complexity | Change Frequency | Differentiating Value | Current Pain                                                        | Classification                     |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------: | ----------: | ---------------: | --------------------: | ------------------------------------------------------------------- | ---------------------------------- |
+| Asset Universe                        | Maintains supported assets, stable asset identity, metadata, symbol search, provider mappings, classification |                High |        High |           Medium |           Medium/High | Ambiguous symbols, provider mapping risk, asset coverage limits     | Supporting, possibly Core-enabling |
+| Market Data Foundation                | Acquires, normalizes, stores, and serves price/metric data for supported assets                               |                High | Medium/High |           Medium |                Medium | Provider unreliability, schema changes, stale data, rate limits     | Supporting                         |
+| Data Quality & Provenance             | Validates data, tracks freshness, quality status, ingestion runs, raw/source lineage, reproducibility         |                High |        High |           Medium |        High for trust | Silent wrong outputs, stale data, weak traceability                 | Core-enabling Supporting           |
+| Watchlist Management                  | Lets users track assets of interest without implying ownership                                                |                High |  Low/Medium |       Low/Medium |                Medium | Watchlist vs portfolio ambiguity, unsupported assets                | Supporting                         |
+| Manual Portfolio Management           | Lets users manually maintain positions and simple portfolio context                                           |                High |      Medium |           Medium |           Medium/High | Manual drift, average cost complexity, corporate action limitations | Supporting, Core-enabling          |
+| Portfolio Valuation                   | Calculates current value and valuation status from positions and validated market data                        |                High |      Medium |           Medium |                Medium | Partial valuation, missing data, currency issues                    | Supporting                         |
+| Application Experience                | Dashboard, portfolio view, watchlist view, asset detail, search experience                                    |                High |      Medium |             High |                Medium | User friction, trust signal presentation                            | Supporting                         |
+| Data Issue Feedback                   | Lets users report incorrect, stale, missing, or confusing data                                                |         Medium/High |      Medium |           Medium |                Medium | Reports need diagnostic context; reports are not truth              | Supporting                         |
+| User & Access                         | Account, authentication, authorization, session management, ownership enforcement                             |                High |      Medium |       Low/Medium |                   Low | Privacy/security requirements                                       | Generic/Supporting                 |
+| Product Analytics                     | Tracks user behavior, activation, workflow usage, engagement                                                  |              Medium |      Medium |           Medium |            Low/Medium | Needed for validation and learning                                  | Generic/Supporting                 |
+| Event Intelligence                    | Ingests and classifies news, earnings, macro, geopolitical, regulatory events                                 |         High future |        High |             High |                  High | Event taxonomy, source reliability, noise                           | Core candidate                     |
+| Entity-to-Asset Relevance             | Maps external entities/events to affected assets, sectors, themes, and portfolios                             |    Very High future |   Very High |             High |             Very High | Ambiguous causality, second-order effects, trust risk               | Core Domain                        |
+| Impact Assessment                     | Estimates direction, magnitude, time horizon, confidence, drivers, counterpoints                              |    Very High future |   Very High |             High |             Very High | Overconfidence, evaluation difficulty, compliance risk              | Core Domain                        |
+| Explanation & Provenance for Insights | Shows why an insight exists, sources, drivers, uncertainty, counterpoints                                     |    Very High future |        High |             High |             Very High | Trust, explainability, source traceability                          | Core Domain                        |
+| Feedback & Evaluation                 | Captures relevance feedback, outcome tracking, calibration, false positives/negatives, backtesting            |         High future |        High |             High |                  High | Hard to evaluate insight quality                                    | Core-enabling                      |
+| Recommendation & Automation           | Alert recommendations, later action suggestions or automation                                                 |              Future |   Very High |             High |        High but risky | Compliance, safety, user trust                                      | Later Core / gated                 |
+| Notification Delivery                 | Sends alerts, briefings, updates                                                                              |       Medium future |      Medium |           Medium |            Low/Medium | Delivery reliability, preferences                                   | Generic/Supporting                 |
+| Compliance & Trust Boundaries         | Disclaimers, advice boundaries, audit trails, consent, suitability limits                                     |         High future |        High |           Medium |     High as guardrail | Regulatory/advice risk                                              | Supporting/Core-enabling           |
+
+### Bounded Context
+
+| Bounded Context           | Decision                                             | Reason                                                                   | V1 Implementation                  |
+| ------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------- |
+| User Access               | Separate context/module                              | Identity and access rules should not leak into portfolio or market data  | Module / external provider adapter |
+| Market Data               | Separate context/module                              | Provider ingestion and serving have distinct model and lifecycle         | Module                             |
+| Data Quality & Provenance | Candidate separate context                           | Trust-critical and will become cross-cutting                             | Submodule now, context later       |
+| Portfolio & Watchlist     | Separate context/module                              | Owns user investing context                                              | Module                             |
+| Portfolio Valuation       | Keep inside Portfolio & Watchlist initially          | Basic valuation only in V1                                               | Domain/application service         |
+| Application Experience    | Composition layer, not core domain context initially | Owns views, not core rules                                               | Frontend + API composition         |
+| Feedback                  | Separate context/module                              | User reports and learning signals should not mutate source data directly | Module                             |
+| Decision Intelligence     | Future core context                                  | Main differentiator, not current slice                                   | Future module                      |
+| Evaluation                | Future core-enabling context                         | Needed for trust/calibration                                             | Future module                      |
+
+```mermaid
+flowchart LR
+    UA[User Access]
+    MD[Market Data]
+    DQ[Data Quality & Provenance]
+    PW[Portfolio & Watchlist]
+    FB[Feedback]
+    AX[Application Experience]
+
+    UA --> PW
+    DQ --> MD
+    MD --> PW
+    MD --> AX
+    DQ --> AX
+    PW --> AX
+    FB --> DQ
+
+    DI[Future: Decision Intelligence]
+    EV[Future: Event Providers]
+    EVAL[Future: Evaluation]
+
+    EV --> DI
+    MD --> DI
+    PW --> DI
+    DQ --> DI
+    DI --> AX
+    FB --> EVAL
+    DI --> EVAL
+    EVAL --> DI
 ```
