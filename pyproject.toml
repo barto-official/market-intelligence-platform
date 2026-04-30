@@ -9,7 +9,8 @@ version = "0.1.0"
 description = "PROJECT_DESCRIPTION"
 readme = "README.md"
 license = "MIT"
-license-files = ["LICENSE"]authors = [ { name = "Bartosz Rzycki", email = "bartosz.rzycki@gmail.com" }, ]
+license-files = ["LICENSE"]
+authors = [{ name = "Bartosz Rzycki", email = "bartosz.rzycki@gmail.com" }]
 dependencies = []
 classifiers = [
     "Programming Language :: Python :: 3",
