@@ -354,4 +354,4 @@ We will name the target system **Market Intelligence Platform** in the C1 System
 - C4 System Context Diagram:
   - `docs/architecture/diagrams/c1-target-system-context.drawio`
 
-<img src="../diagrams/c1-target-system-context.drawio.svg" alt="C1 target system context" width="900" />
+<img src="../diagrams/c1-target-system-context.drawio.svg" alt="C1 target system context" width="1000" />
