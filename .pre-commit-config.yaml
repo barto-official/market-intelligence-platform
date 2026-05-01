@@ -40,7 +40,7 @@ repos:
         name: Generate ADR & RFC Index
         entry: python3 scripts/generate_index.py
         language: system
-        files: ^docs/architecture/adr/.*\.md$|^scripts/generate_index\.py$|^docs/architecture/adr/index\.md$ |^docs/rfc/index\.md$
+        files: ^docs/architecture/adr/.*\.md$|^scripts/generate_index\.py$|^docs/architecture/adr/index\.md$|^docs/rfc/index\.md$
         pass_filenames: false
         stages: [ pre-commit ]
 
@@ -49,7 +49,7 @@ repos:
     rev: 0.7.17
     hooks:
       - id: mdformat
-        exclude: ^(CONTRIBUTING\.md|docs/architecture/adr/index\.md |docs/rfc/index\.md)$
+        exclude: ^(CONTRIBUTING\.md|docs/architecture/adr/index\.md|docs/rfc/index\.md)$
         additional_dependencies:
           - mdformat-gfm==0.3.6
   # Spell checking (codespell)

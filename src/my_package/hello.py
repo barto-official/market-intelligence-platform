@@ -420,7 +420,3 @@ class TaskManager:
     def __len__(self) -> int:
         """Return the number of tasks."""
         return len(self._tasks)
-
-    def __iter__(self) -> Iterator[Task]:
-        """Iterate over tasks in insertion order."""
-        return iter(self._tasks)
