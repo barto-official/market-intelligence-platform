@@ -1,14 +1,14 @@
 # ADR 0003: Strategic Domain-Driven Design for Market Intelligence Platform
 
-| Metadata          | Value                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Date**          | 2026-04-30                                                                                                    |
-| **Author**        | @barto-official                                                                                               |
-| **Status**        | `Proposed`                                                                                                    |
-| **Tags**          | architecture, ddd, strategic-design, bounded-contexts                                                         |
-| **Related**       | `docs/architecture/adr/0002-system-context.md` |
-| **Supersedes**    | N/A                                                                                                           |
-| **Superseded by** | N/A <br/>                                                                                                     |
+| Metadata          | Value                                                 |
+| ----------------- | ----------------------------------------------------- |
+| **Date**          | 2026-04-30                                            |
+| **Author**        | @barto-official                                       |
+| **Status**        | `Proposed`                                            |
+| **Tags**          | architecture, ddd, strategic-design, bounded-contexts |
+| **Related**       | `docs/architecture/adr/0002-system-context.md`        |
+| **Supersedes**    | N/A                                                   |
+| **Superseded by** | N/A <br/>                                             |
 
 # Background
 
@@ -151,15 +151,16 @@ The domain explicitly excludes broker-dealer functionality, guaranteed-return po
 
 ### Capabilities
 
-1. Historical market data acquisition & management
-1. Real-Time market data acquisition & management
-1. Geopolitical Events data acquisition & management
-1. Watchlist and portfolio management
-1. Market data presentation and analytics
-1. User identity and access
-1. Recommendation, Prediction, forecast and of market event and prices
-1. Impact Assessment
-1. Portfolio-aware insight generation
+1. User, access, consent, and personalization management — Manage user accounts, authentication, authorization, sessions, preferences, activity tracking, consent, and future personalization boundaries.
+1. Investing context management — Allow users to create and maintain watchlists, manual portfolios, positions, investing preferences, and later broker-synced holdings or paper portfolios.
+1. Asset and instrument identity management — Maintain supported assets, symbols, exchanges, asset metadata, provider identifier mappings, asset classifications.
+1. Market and financial data acquisition — Acquire historical prices, latest prices, financial metrics, earnings data, asset metadata, and later real-time market data across supported asset classes.
+1. Data quality, normalization, lineage, and governance — Normalize provider data into platform schemas, validate completeness/freshness/ranges/duplicates, track ingestion runs, create dataset versions, record lineage, and expose data quality status.
+1. Market data serving and investment analytics — Publish trusted market data for product use, serve prices and metrics to dashboards, calculate position valuation, portfolio valuation, exposure, performance, and risk summaries.
+1. Market intelligence — Ingest, classify, normalize, and enrich external events, including news, earnings, macro, regulatory, and geopolitical developments.
+1. Event relevance, impact assessment, and portfolio-aware insight generation — Map events to assets, sectors, geographies, watchlists, and portfolios; assess relevance and potential impact; generate explanations, confidence levels, drivers, source evidence, and portfolio-aware narratives.
+1. Notifications, feedback, evaluation, and learning loop — Create and suppress alert candidates, deliver notifications, collect relevance and data-quality feedback, track insight outcomes, evaluate calibration, analyze false positives/false negatives, and support continuous improvement.
+1. Recommendations, broker integration, execution readiness, trust, and compliance governance — Support later portfolio optimization, recommendation governance, broker connection, paper trading, trade-intent workflows, audit trails, disclaimers, financial advice boundaries, model/version provenance, and automation eligibility gates.
 
 ### Business Workflows
 
@@ -395,86 +396,223 @@ flowchart TD
     V --> W[Expose validated data and quality status to consuming workflows]
 ```
 
-#### Workflow: Ingest, Normalize, and Validate Market Data
+#### Workflow: Ingest Market and Financial Data
 
-Actors:
+**Actors:**
 
 - Market Intelligence Platform
 - Scheduled Job / Internal Operator
 - External Market Data Provider
-- Data Quality Process
 - Asset Registry
+- Ingestion Run Tracker
 
-Trigger:
-A scheduled ingestion run, manual backfill, or refresh request requires the platform to obtain market data for supported assets.
+**Trigger:**
+A scheduled ingestion run, manual refresh, or backfill request requires the platform to fetch market or financial data for supported assets.
 
-Main path:
+**Data types covered in this workflow:**
+
+- Historical prices
+- Latest prices
+- Financial metrics
+- Earnings data
+- Asset metadata or reference data
+- Later: real-time price data
+
+**Main path:**
 
 1. Platform determines which supported assets require data.
-1. Platform maps internal asset identifiers to provider-specific identifiers.
-1. Platform requests price, metric, or metadata data from the external provider.
-1. Platform captures raw provider response or source snapshot.
-1. Platform normalizes provider-specific data into platform-standard market data records.
-1. Platform validates schema, completeness, duplicates, ranges, and freshness.
-1. Platform records ingestion run metadata, status, errors, source information, and processing timestamps.
-1. Platform marks market data as healthy, partial, degraded, stale, or failed.
-1. Validated data becomes available to portfolio, watchlist, asset detail, and dashboard views.
+1. Platform determines the ingestion type: historical price, latest price, financial metrics, earnings, metadata, or later real-time data.
+1. Platform creates an ingestion run record with scope, provider, requested data type, and execution timestamp.
+1. Platform resolves internal asset IDs to provider-specific identifiers.
+1. Platform sends the data request to the selected external provider.
+1. Provider returns the requested data.
+1. Platform captures the raw provider response or source snapshot.
+1. Platform records provider metadata such as source, request timestamp, response timestamp, provider status, and data coverage.
+1. Platform marks the ingestion request as received for downstream processing.
+1. Platform passes the raw received data to the data processing, normalization, and validation workflow.
 
-Alternative paths:
+**Alternative paths:**
 
-- Platform performs historical backfill instead of latest-price refresh.
+- Platform fetches historical data for a date range instead of latest data.
+- Platform fetches metrics or earnings data instead of prices.
+- Platform performs a manual backfill for missing or corrected data.
 - Platform partially succeeds for some assets and fails for others.
-- Platform accepts data but marks it degraded due to missing metrics.
-- Platform skips unsupported or inactive assets.
+- Platform skips inactive, unsupported, or unmapped assets.
 - Platform retries transient provider failures.
+- Platform receives a provider response with incomplete data coverage.
 
-Failure paths:
+**Failure paths:**
 
 - Provider is unavailable.
+- Provider request times out.
 - Provider rate limit is exceeded.
+- Provider credentials are invalid.
+- Provider identifier mapping is missing.
 - Provider identifier mapping is incorrect.
-- Raw data schema changes unexpectedly.
-- Data contains impossible values, such as negative prices.
-- Data is stale beyond the allowed threshold.
-- Ingestion succeeds technically but fails quality validation.
+- Requested asset is unsupported.
+- Provider returns unexpected or empty data.
+- Ingestion run fails before raw data is captured.
 
-Business outcome:
-The platform has trusted, traceable, and quality-labeled market data available for user-facing investment context workflows.
+**Business outcome:**
+The platform has captured raw provider data and ingestion metadata for supported market and financial data types, ready for normalization, validation, lineage tracking, and eventual serving.
 
 ```mermaid
 flowchart TD
-    A[Investor wants to check current market position] --> B[Investor signs in]
-    B --> C[Open dashboard, portfolio view, or watchlist view]
-    C --> D{User authorized?}
+    A[Scheduled run, manual refresh, or backfill requested] --> B[Determine supported assets in scope]
+    B --> C[Determine requested data type]
 
-    D -- No --> E[Reject access]
-    E --> Z1[No user-owned context shown]
+    C --> C1[Historical prices]
+    C --> C2[Latest prices]
+    C --> C3[Financial metrics]
+    C --> C4[Earnings data]
+    C --> C5[Asset metadata/reference data]
+    C --> C6[Later: real-time prices]
 
-    D -- Yes --> F[Load user's watchlists and/or portfolio positions]
-    F --> G{Investing context exists?}
+    C1 --> D[Create ingestion run record]
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    C5 --> D
+    C6 --> D
 
-    G -- No --> H[Prompt user to create watchlist or portfolio]
-    H --> Z2[No market position available yet]
+    D --> E[Resolve internal asset IDs to provider identifiers]
+    E --> F{Provider identifiers available and valid?}
 
-    G -- Yes --> I[Resolve relevant assets]
-    I --> J[Retrieve latest validated market data and selected metrics]
-    J --> K{Market data healthy?}
+    F -- No --> G[Record mapping failure]
+    G --> H[Mark affected assets as not fetched]
 
-    K -- Yes --> L[Calculate basic values such as current value and simple gain/loss where supported]
-    K -- No --> M[Use available data but show stale, degraded, partial, or unavailable status]
+    F -- Yes --> I[Request data from external provider]
+    I --> J{Provider response received?}
 
-    L --> N[Render portfolio/watchlist market position]
+    J -- No --> K[Record provider timeout or request failure]
+    K --> L{Retry allowed?}
+
+    L -- Yes --> I
+    L -- No --> M[Mark ingestion run failed or partially failed]
+
+    J -- Yes --> N[Capture raw provider response]
+    N --> O[Record source, request, response, coverage, and provider metadata]
+    O --> P[Mark raw data as received]
+
+    H --> Q[Send run metadata to downstream processing]
+    M --> Q
+    P --> Q
+
+    Q --> R[Raw data ready for normalization and validation workflow]
+```
+
+#### Workflow: Normalize, Clean, Validate, and Publish Market Data
+
+**Actors:**
+
+- Market Intelligence Platform
+- Data Processing Pipeline
+- Data Quality Process
+- Asset Registry
+- Market Data Store
+- Data Registry / Lineage Store
+- Portfolio, Watchlist, Dashboard, and Analytics consumers
+
+**Trigger:**
+Raw provider data has been received from an ingestion workflow and needs to be transformed into trusted market data.
+
+**Data types covered in this workflow:**
+
+- Raw historical price data
+- Raw latest price data
+- Raw financial metrics
+- Raw earnings data
+- Raw asset metadata/reference data
+- Later: raw real-time price messages
+
+**Main path:**
+
+1. Platform loads raw provider data from the ingestion output.
+1. Platform records or confirms raw data persistence for replay and auditability.
+1. Platform parses provider-specific fields.
+1. Platform normalizes raw data into platform-standard schemas.
+1. Platform resolves asset references against the internal asset registry.
+1. Platform cleans data where safe and rule-based, such as formatting, type coercion, timestamp normalization, currency normalization where supported, and duplicate removal.
+1. Platform validates schema, required fields, completeness, duplicate records, value ranges, timestamp consistency, and freshness.
+1. Platform assigns a data quality status such as healthy, partial, degraded, stale, or failed.
+1. Platform creates or updates dataset version metadata.
+1. Platform records lineage from provider source to raw data, normalized data, validation results, and serving-ready output.
+1. Platform publishes only valid or explicitly quality-labeled data for serving.
+1. Portfolio, watchlist, dashboard, and analytics workflows consume the serving-ready data and its quality/freshness status.
+
+**Alternative paths:**
+
+- Data passes all checks and is marked healthy.
+- Data is usable but incomplete and is marked partial.
+- Data is available but stale and is marked stale.
+- Data contains non-critical issues and is marked degraded.
+- Data fails validation and is blocked from healthy serving.
+- Some assets pass validation while others fail.
+- Previously served data remains active while new data is rejected.
+- A dataset is regenerated through replay or backfill.
+
+**Failure paths:**
+
+- Raw data cannot be loaded.
+- Provider schema changed unexpectedly.
+- Normalization fails.
+- Asset reference cannot be resolved.
+- Required fields are missing.
+- Duplicate records cannot be safely resolved.
+- Data contains impossible values, such as negative prices.
+- Data is stale beyond the allowed threshold.
+- Dataset version cannot be created.
+- Lineage cannot be recorded.
+- No trustworthy data is available for serving.
+
+**Business outcome:**
+The platform has trusted, normalized, traceable, and quality-labeled market data that can safely power watchlists, portfolios, dashboards, analytics, and future insight-generation workflows.
+
+```mermaid
+flowchart TD
+    A[Raw provider data received] --> B[Load raw data]
+    B --> C{Raw data available?}
+
+    C -- No --> D[Record raw data load failure]
+    D --> Z1[Data not published for serving]
+
+    C -- Yes --> E[Persist or confirm raw source snapshot]
+    E --> F[Parse provider-specific fields]
+    F --> G[Normalize into platform-standard schema]
+
+    G --> H{Normalization succeeds?}
+    H -- No --> I[Record normalization failure]
+    I --> Z1
+
+    H -- Yes --> J[Resolve asset references using asset registry]
+    J --> K{Asset references resolved?}
+
+    K -- No --> L[Record unresolved asset mapping]
+    L --> M[Mark affected records failed or degraded]
+
+    K -- Yes --> N[Clean safe and rule-based issues]
     M --> N
 
-    N --> O[Investor reviews current asset and portfolio state]
-    O --> P{Investor sees incorrect or confusing data?}
+    N --> O[Run schema, completeness, duplicate, range, timestamp, and freshness checks]
+    O --> P{Validation result}
 
-    P -- Yes --> Q[Investor reports data issue]
-    Q --> R[Data issue recorded for review]
+    P -- Healthy --> Q[Assign healthy data quality status]
+    P -- Partial --> R[Assign partial data quality status]
+    P -- Degraded --> S[Assign degraded data quality status]
+    P -- Stale --> T[Assign stale data quality status]
+    P -- Failed --> U[Assign failed data quality status and block healthy serving]
 
-    P -- No --> S[Investor may open asset detail, update position, or continue monitoring]
-    R --> S
-    S --> T[Investor has current market context with visible trust signals]
+    Q --> V[Create or update dataset version]
+    R --> V
+    S --> V
+    T --> V
+    U --> W[Record validation failure and keep previous trusted data if available]
+
+    V --> X[Record lineage from source to serving output]
+    X --> Y[Publish quality-labeled data for serving]
+    Y --> Z[Portfolio, watchlist, dashboard, and analytics consume data with quality status]
+
+    W --> Z2[No new healthy serving data published]
 ```
 
 ### Pain Points
@@ -514,55 +652,86 @@ flowchart TD
 ### Actors
 
 - Authenticated Investor
-- Internal Operator
+- Admin
 - Scheduled Ingestion Job
 - Market Data Provider
 - Market Intelligence Platform
-- Asset Registry
-- Data Quality Process
 - Authorization Mechanism
+- Broker
+- Notification System
 
-### Commands / Queries
+### Commands
 
 - CreateWatchlist
+
 - RenameWatchlist
+
 - DeleteWatchlist
-- SearchAsset
+
 - AddAssetToWatchlist
+
 - RemoveAssetFromWatchlist
+
 - CreatePortfolio
+
 - RenamePortfolio
+
 - DeletePortfolio
+
 - AddPosition
+
 - UpdatePosition
+
 - RemovePosition
+
 - RunMarketDataIngestion
+
 - RunHistoricalBackfill
+
 - ResolveProviderIdentifiers
+
 - RequestProviderMarketData
+
 - CaptureRawMarketData
+
 - NormalizeMarketData
+
 - ValidateMarketData
+
 - CalculateFreshnessStatus
+
 - PublishMarketDataForServing
+
+- CalculatePortfolioValuation
+
+- ReportDataIssue
+
+- StartDataIssueTriage
+
+- ResolveDataIssue
+
+### Queries
+
+- SearchAsset
 - ViewDashboard
 - ViewPortfolio
 - ViewWatchlist
 - ViewAssetDetail
-- CalculatePortfolioValuation
-- ReportDataIssue
+- GetPortfolioMarketPosition
+- GetWatchlistMarketPosition
+- GetAssetMarketData
+- GetIngestionRunStatus
+- GetMarketDataQualityView
 
 ### Events
+
+#### Domain events
 
 - WatchlistCreated
 
 - WatchlistRenamed
 
 - WatchlistDeleted
-
-- AssetSearchPerformed
-
-- AssetSearchReturned
 
 - AssetAddedToWatchlist
 
@@ -584,30 +753,6 @@ flowchart TD
 
 - PositionEntryRejected
 
-- MarketDataIngestionStarted
-
-- HistoricalBackfillStarted
-
-- ProviderIdentifiersResolved
-
-- ProviderIdentifierResolutionFailed
-
-- ProviderDataRequested
-
-- ProviderDataReceived
-
-- ProviderDataRequestFailed
-
-- RawMarketDataCaptured
-
-- MarketDataNormalized
-
-- MarketDataNormalizationFailed
-
-- MarketDataValidated
-
-- MarketDataValidationFailed
-
 - MarketDataMarkedHealthy
 
 - MarketDataMarkedDegraded
@@ -616,29 +761,11 @@ flowchart TD
 
 - MarketDataPublishedForServing
 
-- MarketDataIngestionCompleted
-
-- MarketDataIngestionPartiallyCompleted
-
-- MarketDataIngestionFailed
-
-- DashboardViewed
-
-- PortfolioViewed
-
-- WatchlistViewed
-
-- AssetDetailViewed
-
 - PortfolioValuationCalculated
 
 - PortfolioValuationPartiallyCalculated
 
 - PortfolioValuationFailed
-
-- MarketPositionDisplayed
-
-- MarketPositionDisplayDegraded
 
 - DataIssueReported
 
@@ -646,26 +773,87 @@ flowchart TD
 
 - DataIssueResolved
 
+#### Ingestion/process events
+
+- MarketDataIngestionStarted
+- HistoricalBackfillStarted
+- ProviderIdentifiersResolved
+- ProviderIdentifierResolutionFailed
+- MarketDataRequested
+- MarketDataReceived
+- MarketDataRequestFailed
+- RawMarketDataCaptured
+- MarketDataNormalized
+- MarketDataNormalizationFailed
+- MarketDataValidated
+- MarketDataValidationFailed
+- MarketDataIngestionCompleted
+- MarketDataIngestionPartiallyCompleted
+- MarketDataIngestionFailed
+
+#### Query/product usage events
+
+- AssetSearchPerformed
+- AssetSearchReturned
+- DashboardViewed
+- PortfolioViewed
+- WatchlistViewed
+- AssetDetailViewed
+- PortfolioMarketPositionDisplayed
+- MarketPositionDisplayedWithDegradedData
+
 ### Policies
 
-- User-owned context access policy
+**Access & Ownership**
+
+- User-owned investing context access policy
+- Administrative override access policy (future)
+
+**Asset Identity & Eligibility**
+
 - Supported asset policy
-- Duplicate watchlist asset policy
+- Internal asset identity policy
 - Asset identity disambiguation policy
-- Portfolio ownership policy
+- Duplicate asset prevention policy (watchlist)
+- Duplicate position policy (portfolio)
+
+**Portfolio & Position**
+
+- Position quantity validation policy
+- Cost basis handling policy
 - Manual portfolio accuracy policy
-- Basic valuation policy
+- Currency handling policy
+- Partial valuation policy
+
+**Market Data Ingestion**
+
 - Provider identifier resolution policy
+- Retry policy
 - Raw data capture policy
+- Ingestion completeness policy
+
+**Data Normalization & Validation**
+
 - Data normalization policy
 - Data validation policy
+- Data rejection policy
+
+**Data Quality & Freshness**
+
 - Quality status policy
 - Freshness policy
+- Previous trusted data fallback policy
+
+**Data Serving**
+
 - Publish only validated data policy
-- Retry policy
-- Partial valuation policy
+- Serving eligibility policy
+- Partial data serving policy
+
+**Trust, Transparency & UX**
+
 - Trust signal display policy
-- Issue feedback policy
+- Facts vs analytics distinction policy
 
 ### Read Models
 
@@ -684,23 +872,38 @@ flowchart TD
 - Watchlist Market Position View
 - Asset Detail View
 - Data Issue Submission View
+- Data Issue Triage View
+- Market Data Freshness View
+- Portfolio Valuation Status View
 
 ### Pain Points
 
-- Ambiguous asset identity
-- Unsupported assets
-- Provider identifier mismatch
-- Provider schema changes
-- Partial ingestion success
-- Stale but technically successful data
-- Manual portfolio drift
-- Cost basis complexity
-- Corporate actions
-- Currency mismatch
-- User may overtrust degraded data
-- Portfolio valuation may be incomplete
-- Dashboard may blur facts and insights
-- User feedback may lack diagnostic context
+- **User pain**
+
+  - Unsupported assets
+  - Dashboard may blur facts and insights
+  - Ambiguous asset identity
+  - Manual portfolio drift
+
+- **Data correctness pain**
+
+  - Provider identifier mismatch
+  - Provider schema changes
+  - Partial ingestion success
+  - Stale but technically successful data
+  - Previous data overwritten by bad provider response
+
+- **Financial modeling pain**
+
+  - Cost basis complexity
+  - Corporate actions
+  - Currency mismatch
+  - Portfolio valuation may be incomplete
+
+- **Trust/compliance pain**
+
+  - User may overtrust degraded data
+  - User feedback may lack diagnostic context
 
 ### Business Rules
 
@@ -732,13 +935,13 @@ flowchart TD
 | ID     | Failure Case                    | Workflow                 | Detection                       | Expected Handling                  | Event / Outcome                                        |
 | ------ | ------------------------------- | ------------------------ | ------------------------------- | ---------------------------------- | ------------------------------------------------------ |
 | FC-001 | Unsupported asset               | Watchlist, Portfolio     | Asset not in supported registry | Reject add/create action           | WatchlistAssetAdditionRejected / PositionEntryRejected |
-| FC-002 | Ambiguous asset identifier      | Watchlist, Portfolio     | Multiple matching assets        | Require disambiguation             | AssetSearchReturned / Addition rejected                |
+| FC-002 | Ambiguous asset identifier      | Watchlist, Portfolio     | Multiple matching assets        | Require disambiguation             | AssetSearchResultsReturned / Addition rejected         |
 | FC-003 | Duplicate watchlist asset       | Watchlist                | Same asset_id already present   | Reject or no-op                    | WatchlistAssetAdditionRejected                         |
 | FC-004 | Unauthorized access             | All user-owned contexts  | user_id mismatch                | Reject and audit                   | AccessDenied                                           |
 | FC-005 | Invalid quantity                | Portfolio                | Quantity validation fails       | Reject position command            | PositionEntryRejected                                  |
 | FC-006 | Invalid average cost            | Portfolio                | Cost validation fails           | Reject or allow without cost       | PositionEntryRejected / PositionAdded                  |
 | FC-007 | Duplicate portfolio position    | Portfolio                | Position for same asset exists  | Reject or route to update          | PositionEntryRejected / PositionUpdated                |
-| FC-008 | Provider unavailable            | Market data ingestion    | Timeout/5xx/network error       | Retry, then mark failed/partial    | ProviderDataRequestFailed                              |
+| FC-008 | Provider unavailable            | Market data ingestion    | Timeout/5xx/network error       | Retry, then mark failed/partial    | MarketDataRequestFailed                                |
 | FC-009 | Provider rate limit exceeded    | Market data ingestion    | 429/quota response              | Delay/stop requests                | MarketDataIngestionPartiallyCompleted                  |
 | FC-010 | Missing provider mapping        | Market data ingestion    | No provider identifier          | Skip asset, record failure         | ProviderIdentifierResolutionFailed                     |
 | FC-011 | Ambiguous provider mapping      | Market data ingestion    | Multiple mappings               | Block attachment, manual review    | ProviderIdentifierResolutionFailed                     |
@@ -813,70 +1016,197 @@ Severity 4: Operational/compliance concern
 | Insight             | Explanation of why something may matter                              | Future Intelligence   | Recommendation               |
 | Recommendation      | Suggested action/configuration                                       | Future Automation     | Insight                      |
 
-### Subdomain
+## Subdomains
 
-| Subdomain                             | Description                                                                                                   | Business Importance |  Complexity | Change Frequency | Differentiating Value | Current Pain                                                        | Classification                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------: | ----------: | ---------------: | --------------------: | ------------------------------------------------------------------- | ---------------------------------- |
-| Asset Universe                        | Maintains supported assets, stable asset identity, metadata, symbol search, provider mappings, classification |                High |        High |           Medium |           Medium/High | Ambiguous symbols, provider mapping risk, asset coverage limits     | Supporting, possibly Core-enabling |
-| Market Data Foundation                | Acquires, normalizes, stores, and serves price/metric data for supported assets                               |                High | Medium/High |           Medium |                Medium | Provider unreliability, schema changes, stale data, rate limits     | Supporting                         |
-| Data Quality & Provenance             | Validates data, tracks freshness, quality status, ingestion runs, raw/source lineage, reproducibility         |                High |        High |           Medium |        High for trust | Silent wrong outputs, stale data, weak traceability                 | Core-enabling Supporting           |
-| Watchlist Management                  | Lets users track assets of interest without implying ownership                                                |                High |  Low/Medium |       Low/Medium |                Medium | Watchlist vs portfolio ambiguity, unsupported assets                | Supporting                         |
-| Manual Portfolio Management           | Lets users manually maintain positions and simple portfolio context                                           |                High |      Medium |           Medium |           Medium/High | Manual drift, average cost complexity, corporate action limitations | Supporting, Core-enabling          |
-| Portfolio Valuation                   | Calculates current value and valuation status from positions and validated market data                        |                High |      Medium |           Medium |                Medium | Partial valuation, missing data, currency issues                    | Supporting                         |
-| Application Experience                | Dashboard, portfolio view, watchlist view, asset detail, search experience                                    |                High |      Medium |             High |                Medium | User friction, trust signal presentation                            | Supporting                         |
-| Data Issue Feedback                   | Lets users report incorrect, stale, missing, or confusing data                                                |         Medium/High |      Medium |           Medium |                Medium | Reports need diagnostic context; reports are not truth              | Supporting                         |
-| User & Access                         | Account, authentication, authorization, session management, ownership enforcement                             |                High |      Medium |       Low/Medium |                   Low | Privacy/security requirements                                       | Generic/Supporting                 |
-| Product Analytics                     | Tracks user behavior, activation, workflow usage, engagement                                                  |              Medium |      Medium |           Medium |            Low/Medium | Needed for validation and learning                                  | Generic/Supporting                 |
-| Event Intelligence                    | Ingests and classifies news, earnings, macro, geopolitical, regulatory events                                 |         High future |        High |             High |                  High | Event taxonomy, source reliability, noise                           | Core candidate                     |
-| Entity-to-Asset Relevance             | Maps external entities/events to affected assets, sectors, themes, and portfolios                             |    Very High future |   Very High |             High |             Very High | Ambiguous causality, second-order effects, trust risk               | Core Domain                        |
-| Impact Assessment                     | Estimates direction, magnitude, time horizon, confidence, drivers, counterpoints                              |    Very High future |   Very High |             High |             Very High | Overconfidence, evaluation difficulty, compliance risk              | Core Domain                        |
-| Explanation & Provenance for Insights | Shows why an insight exists, sources, drivers, uncertainty, counterpoints                                     |    Very High future |        High |             High |             Very High | Trust, explainability, source traceability                          | Core Domain                        |
-| Feedback & Evaluation                 | Captures relevance feedback, outcome tracking, calibration, false positives/negatives, backtesting            |         High future |        High |             High |                  High | Hard to evaluate insight quality                                    | Core-enabling                      |
-| Recommendation & Automation           | Alert recommendations, later action suggestions or automation                                                 |              Future |   Very High |             High |        High but risky | Compliance, safety, user trust                                      | Later Core / gated                 |
-| Notification Delivery                 | Sends alerts, briefings, updates                                                                              |       Medium future |      Medium |           Medium |            Low/Medium | Delivery reliability, preferences                                   | Generic/Supporting                 |
-| Compliance & Trust Boundaries         | Disclaimers, advice boundaries, audit trails, consent, suitability limits                                     |         High future |        High |           Medium |     High as guardrail | Regulatory/advice risk                                              | Supporting/Core-enabling           |
+| Subdomain                                 | Description                                                                                                  | Business importance  | Complexity  | Change frequency | Differentiating value  | Current pain                                                                | Classification                   |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------- | ----------- | ---------------- | ---------------------- | --------------------------------------------------------------------------- | -------------------------------- |
+| Event-to-Asset Relevance                  | Determines whether external events are relevant to assets, sectors, geographies, watchlists, and portfolios. | Very High            | High        | High             | Very High              | Noisy signals, weak relevance, mapping errors reduce trust.                 | Core Domain                      |
+| Impact Assessment                         | Estimates direction, magnitude, confidence, and time horizon of event impact on assets.                      | Very High            | High        | High             | Very High              | Misleading or oversimplified impact; lack of explainability.                | Core Domain                      |
+| Insight Generation & Explanation          | Produces user-facing insights with explanations, evidence, and uncertainty grounded in portfolio context.    | Very High            | High        | High             | Very High              | Opaque insights, risk of overconfidence, poor separation from raw data.     | Core Domain                      |
+| Feedback & Evaluation Loop                | Captures feedback, evaluates correctness and calibration, and improves models and insights.                  | High                 | High        | High             | High (long-term)       | Feedback lacks context; weak evaluation loop.                               | Core-enabling Subdomain          |
+| Event Understanding                       | Classifies and enriches events (entity extraction, tagging, severity, mapping).                              | High                 | High        | High             | Medium–High            | Unstructured data, inconsistent classification, entity ambiguity.           | Core-enabling Subdomain          |
+| Portfolio Analytics                       | Calculates valuation, exposure, performance, and basic risk metrics.                                         | High                 | Medium–High | Medium           | Medium                 | Partial valuation, currency mismatch, cost basis issues.                    | Supporting (core-enabling later) |
+| Investing Context (Watchlist & Portfolio) | Manages user-owned watchlists, portfolios, positions, and preferences.                                       | High                 | Medium      | Medium           | Medium                 | Manual drift, identity ambiguity, confusion between watchlist vs portfolio. | Supporting Subdomain             |
+| Market Data Serving                       | Provides validated, quality-labeled market data for product use.                                             | High                 | Medium      | Medium           | Low–Medium             | Incorrect trust signals, stale/degraded data presentation.                  | Supporting Subdomain             |
+| Data Quality, Lineage & Governance        | Ensures correctness, traceability, versioning, and trustworthiness of data.                                  | Very High            | High        | Medium–High      | Indirect but critical  | Silent failures, lack of provenance, debugging difficulty.                  | Supporting (strategic)           |
+| Market Data Ingestion                     | Acquires market and financial data from providers.                                                           | High                 | Medium–High | Medium           | Low                    | Provider failures, schema changes, partial ingestion.                       | Supporting Subdomain             |
+| Asset Registry & Identity                 | Maintains supported assets, identifiers, mappings, and metadata.                                             | High                 | Medium      | Low–Medium       | Low–Medium (high risk) | Ambiguous symbols, incorrect mappings, identity inconsistency.              | Supporting Subdomain             |
+| Notification & Alerting                   | Generates and delivers alerts based on data, events, or insights.                                            | Medium               | Medium      | Medium           | Low–Medium             | Alert fatigue, low signal-to-noise ratio.                                   | Generic / Supporting             |
+| Recommendation & Optimization             | Produces portfolio suggestions and optimization strategies.                                                  | High (future)        | High        | High             | High                   | Requires strong trust, explainability, compliance.                          | Core Domain (future)             |
+| Broker Integration                        | Connects to brokers and syncs holdings/transactions.                                                         | Medium               | Medium      | Low–Medium       | Low                    | Integration variability, reconciliation complexity, security.               | Generic / Supporting             |
+| Trading / Execution                       | Handles trade intents, order submission, and execution tracking.                                             | Medium–High (future) | High        | Medium           | Low–Medium             | Regulatory risk, correctness requirements.                                  | Supporting / Regulated           |
+| User & Access Management                  | Manages authentication, authorization, and identity.                                                         | Medium               | Low         | Low              | Low                    | Security integration complexity.                                            | Generic Subdomain                |
+| Operations & Platform Engineering         | Handles deployment, monitoring, logging, and system operations.                                              | Medium               | Medium      | Medium           | None                   | Cost control, reliability, observability challenges.                        | Generic Subdomain                |
+
+### Possible Ambiguous Language Candidates
+
+| Term                | Ambiguity                                                                                       | Recommended distinction                                                                                                         |
+| ------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Asset               | Could mean security, instrument, symbol, provider object, portfolio holding, or watchlist item. | Use `Asset` for platform-supported instrument identity. Use `Position` for user holding. Use `WatchlistItem` for tracked asset. |
+| Symbol / Ticker     | Same ticker may exist on multiple exchanges or providers.                                       | Treat symbol as display/search attribute, never identity.                                                                       |
+| Provider Identifier | Could be mistaken for internal asset identity.                                                  | Provider ID is external mapping only; internal `asset_id` is source of truth.                                                   |
+| Watchlist Asset     | Could be confused with owned holding.                                                           | Watchlist item means interest/tracking, not ownership.                                                                          |
+| Portfolio Position  | Could be confused with asset itself.                                                            | Position is user-specific holding/reference to an asset plus quantity/cost data.                                                |
+| Portfolio           | Could mean real holdings, paper portfolio, broker account, strategy, or view.                   | Distinguish `ManualPortfolio`, `PaperPortfolio`, `BrokerSyncedPortfolio` later.                                                 |
+| Market Data         | Could mean raw provider data, normalized data, validated data, or served data.                  | Use `RawMarketData`, `NormalizedMarketData`, `ValidatedMarketData`, `ServingMarketData`.                                        |
+| Latest Price        | Could mean provider latest, platform latest, or latest validated.                               | Use `LatestProviderPrice` vs `LatestValidatedPrice`.                                                                            |
+| Fresh               | Could be confused with valid/correct.                                                           | Freshness is time-based; validity is quality-rule-based.                                                                        |
+| Healthy             | Could mean technically ingested or business-trustworthy.                                        | Healthy means passed quality and serving eligibility checks.                                                                    |
+| Degraded            | Could mean incomplete, stale, partial, or low confidence.                                       | Define explicit statuses: `partial`, `stale`, `degraded`, `failed`.                                                             |
+| Event               | Could mean domain event, market news event, system event, product usage event.                  | Use `DomainEvent`, `ExternalMarketEvent`, `SystemEvent`, `UsageEvent`.                                                          |
+| Insight             | Could mean raw data, analytics, explanation, recommendation, or alert.                          | Insight should mean interpreted, user-facing intelligence with evidence/uncertainty.                                            |
+| Impact              | Could mean price move, causal effect, risk exposure, or user action.                            | Define impact as estimated effect with direction, magnitude, horizon, confidence, drivers.                                      |
+| Recommendation      | Could imply financial advice.                                                                   | Prefer `Consideration`, `Scenario`, or `Decision Support Recommendation` until governance matures.                              |
+| Alert               | Could mean notification, volatility signal, event signal, or insight.                           | Separate `NotificationCandidate`, `AlertPolicy`, and `NotificationDelivery`.                                                    |
+| Valuation           | Could mean position value, portfolio value, P&L, performance, or risk.                          | Separate `PositionValuation`, `PortfolioValuation`, `Performance`, `Exposure`.                                                  |
+| User                | Could mean authenticated identity, investor, admin, support operator.                           | Use `Investor`, `InternalOperator`, `SupportUser`, `AdminUser`.                                                                 |
+| Data Issue          | Could mean provider error, user misunderstanding, stale data, wrong mapping, or UI confusion.   | Data issue report must include category and diagnostic context.                                                                 |
+| Audit               | Could mean security logs, data lineage, model provenance, execution records.                    | Separate `AuditRecord`, `LineageRecord`, `ModelProvenance`, `ExecutionAudit`.                                                   |
 
 ### Bounded Context
 
-| Bounded Context           | Decision                                             | Reason                                                                   | V1 Implementation                  |
-| ------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------- |
-| User Access               | Separate context/module                              | Identity and access rules should not leak into portfolio or market data  | Module / external provider adapter |
-| Market Data               | Separate context/module                              | Provider ingestion and serving have distinct model and lifecycle         | Module                             |
-| Data Quality & Provenance | Candidate separate context                           | Trust-critical and will become cross-cutting                             | Submodule now, context later       |
-| Portfolio & Watchlist     | Separate context/module                              | Owns user investing context                                              | Module                             |
-| Portfolio Valuation       | Keep inside Portfolio & Watchlist initially          | Basic valuation only in V1                                               | Domain/application service         |
-| Application Experience    | Composition layer, not core domain context initially | Owns views, not core rules                                               | Frontend + API composition         |
-| Feedback                  | Separate context/module                              | User reports and learning signals should not mutate source data directly | Module                             |
-| Decision Intelligence     | Future core context                                  | Main differentiator, not current slice                                   | Future module                      |
-| Evaluation                | Future core-enabling context                         | Needed for trust/calibration                                             | Future module                      |
+| Candidate bounded context             | Purpose                                                                                  | Owned concepts                                                                                  | Main workflows                                                                    | Upstream dependencies                                                      | Downstream consumers                                           | Implementation candidate                          |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------- |
+| User Access Context                   | Manage identity, access, permissions, consent, and preferences.                          | User, Identity, Permission, Consent, Preference                                                 | Authenticate user, authorize access, grant/revoke consent                         | External auth provider                                                     | All user-owned contexts                                        | Use standard auth/service/module                  |
+| Investing Context                     | Manage user-owned watchlists, portfolios, and positions.                                 | Watchlist, WatchlistItem, Portfolio, Position, ManualPortfolio                                  | Create watchlist, add asset, create portfolio, add/update/remove position         | User Access, Asset Registry                                                | Portfolio Analytics, Relevance, Dashboard                      | Module/context in modular monolith                |
+| Asset Registry Context                | Maintain stable asset identity and supported instrument universe.                        | Asset, Symbol, Exchange, ProviderMapping, AssetMetadata, AssetClassification                    | Register asset, resolve symbol, map provider ID, classify asset                   | Market data providers/reference sources                                    | Investing Context, Market Data, Relevance, Portfolio Analytics | Strong candidate for separate module/context      |
+| Market Data Ingestion Context         | Acquire market/financial data from providers.                                            | IngestionRun, ProviderRequest, ProviderResponse, RawMarketData, Backfill                        | Run ingestion, request provider data, capture raw data, retry/backfill            | Asset Registry, Market Data Provider                                       | Data Quality & Lineage                                         | Background worker/module                          |
+| Data Quality & Lineage Context        | Validate, version, and trace data quality/provenance.                                    | ValidationResult, QualityStatus, DatasetVersion, LineageRecord, Provenance                      | Validate data, mark stale/degraded/failed, create dataset version, record lineage | Market Data Ingestion                                                      | Market Data Serving, Analytics, Audit                          | Module/context, possibly shared across data types |
+| Market Data Serving Context           | Expose trusted market data to product and analytics consumers.                           | ServingMarketData, LatestValidatedPrice, ServingDataset, FreshnessStatus                        | Publish data, serve latest prices/metrics, expose quality labels                  | Data Quality & Lineage                                                     | Investing views, Portfolio Analytics, Dashboard, Insights      | Read-optimized module/API                         |
+| Portfolio Analytics Context           | Calculate valuation, exposure, performance, and portfolio analytics.                     | PositionValuation, PortfolioValuation, Exposure, Performance, RiskProfile                       | Calculate valuation, calculate exposure, produce portfolio market position        | Investing Context, Market Data Serving                                     | Dashboard, Relevance, Insight Delivery                         | Module/analytics service                          |
+| Event Intelligence Context            | Ingest, normalize, classify, and enrich external events.                                 | ExternalEvent, NewsEvent, GeopoliticalEvent, MacroEvent, EventTaxonomy, EntityMention           | Ingest event, classify event, extract entities, assess event quality              | Event/news providers                                                       | Relevance, Impact Assessment, Insight Delivery                 | Future core-enabling context                      |
+| Relevance Context                     | Determine which events matter to assets/watchlists/portfolios.                           | RelevanceScore, AssetEventMatch, PortfolioEventMatch, WatchlistEventMatch                       | Match event to asset, rank relevance, suppress low-relevance events               | Event Intelligence, Asset Registry, Investing Context, Portfolio Analytics | Insight Delivery, Notifications, Impact Assessment             | Core context                                      |
+| Impact Assessment Context             | Estimate event impact, confidence, drivers, and horizon.                                 | ImpactAssessment, ImpactDriver, ConfidenceEstimate, HistoricalAnalogue                          | Assess impact, estimate confidence, retrieve analogues                            | Relevance, Event Intelligence, Market Data, Portfolio Analytics            | Insight Delivery, Recommendation                               | Core context                                      |
+| Insight Delivery Context              | Generate, explain, publish, and suppress user-facing insights.                           | Insight, Explanation, Narrative, EvidenceLink, PublishedInsight, SuppressedInsight              | Generate insight, generate explanation, publish/suppress insight                  | Relevance, Impact Assessment, Trust & Governance                           | Dashboard, Notifications, Feedback                             | Core context / app-facing service                 |
+| Notification Context                  | Decide when to interrupt users and track delivery.                                       | NotificationCandidate, Notification, DeliveryStatus, AlertPreference                            | Create candidate, suppress, send, track delivery/open/dismissal                   | Insight Delivery, Relevance, User Preferences                              | User, Feedback & Evaluation                                    | Mostly generic with domain alert policy           |
+| Feedback & Evaluation Context         | Capture feedback and evaluate insight/data/model quality.                                | Feedback, DataIssue, OutcomeObservation, CalibrationResult, FalsePositive, FalseNegative        | Report issue, mark insight relevant, evaluate calibration, track outcomes         | Insight Delivery, Market Data Serving, Model/Insight versions              | Relevance, Impact Assessment, Product decisions                | Core-enabling context                             |
+| Recommendation & Optimization Context | Generate portfolio scenarios and decision-support recommendations.                       | OptimizationScenario, Constraint, Objective, Recommendation, SuitabilityBoundary                | Optimize portfolio, generate/suppress recommendation, review recommendation       | Impact Assessment, Portfolio Analytics, Trust & Governance                 | Insight Delivery, Execution                                    | Future core context                               |
+| Broker Integration Context            | Connect broker accounts and sync external holdings/transactions.                         | BrokerConnection, BrokerAccount, BrokerHolding, BrokerTransaction, BrokerAssetMapping           | Connect broker, sync holdings, import transactions, reconcile assets              | User Consent, Broker Provider, Asset Registry                              | Investing Context, Execution                                   | Later separate module/context                     |
+| Execution Context                     | Manage trade intents, approval, risk checks, order submission, and fills.                | TradeIntent, OrderPreview, PreTradeCheck, BrokerOrder, ExecutionReport, KillSwitch              | Create/approve intent, run checks, submit order, reconcile execution              | Recommendation, Broker Integration, Trust & Governance                     | Audit, Portfolio/Broker sync                                   | Strongly isolated future context                  |
+| Trust & Governance Context            | Enforce advice boundaries, disclosures, auditability, provenance, and eligibility gates. | Disclosure, AuditRecord, PolicyDecision, AdviceBoundary, ModelProvenance, AutomationEligibility | Enforce policy, record audit, show disclosure, approve model/version              | All sensitive contexts                                                     | All sensitive contexts, compliance review                      | Cross-cutting context/service                     |
+| Platform Operations Context           | Operate infrastructure, releases, incidents, observability, and cost.                    | Deployment, Incident, Alert, Runbook, CostSignal, Trace                                         | Deploy, monitor, alert, incident response                                         | All services/platform                                                      | Operators/developers                                           | Generic platform concern                          |
+
+Why Asset Registry is separated from Market Data?
+
+- Asset Registry is about identity. Asset Registry answers: “What asset is this?”
+
+- Market Data is about observations and measurements. Market Data answers: “What data do we know about this asset over time?”
+
+- They have different rules
+
+  - Asset Registry rules:
+
+    - Platform assets must have stable internal identity.
+    - Symbols are not identity.
+    - Provider identifiers must map unambiguously.
+    - Only supported assets can be selected.
+    - Ambiguous assets require disambiguation.
+
+  - Market Data rules:
+
+    - Raw provider data must be captured where feasible.
+    - Data must be normalized before serving.
+    - Freshness is separate from validity.
+    - Failed data must not be served as healthy.
+    - Partial ingestion must be explicit.
+
+- They have different ownership
+
+- They have different frequency change
+
+- They have different integration direction
 
 ```mermaid
 flowchart LR
-    UA[User Access]
-    MD[Market Data]
-    DQ[Data Quality & Provenance]
-    PW[Portfolio & Watchlist]
-    FB[Feedback]
-    AX[Application Experience]
+    %% External systems
+    MDP[External Market Data Provider]
+    EDP[External Event/News Provider]
+    BP[External Broker Provider]
+    AUTH[External Auth Provider]
 
-    UA --> PW
-    DQ --> MD
-    MD --> PW
-    MD --> AX
-    DQ --> AX
-    PW --> AX
-    FB --> DQ
+    %% Generic/supporting
+    UA[User Access Context]
+    AR[Asset Registry Context]
+    MDI[Market Data Ingestion Context]
+    DQ[Data Quality & Lineage Context]
+    MDS[Market Data Serving Context]
+    IC[Investing Context]
+    PA[Portfolio Analytics Context]
+    TG[Trust & Governance Context]
+    N[Notification Context]
+    PO[Platform Operations Context]
 
-    DI[Future: Decision Intelligence]
-    EV[Future: Event Providers]
-    EVAL[Future: Evaluation]
+    %% Core intelligence
+    EI[Event Intelligence Context]
+    R[Relevance Context]
+    IA[Impact Assessment Context]
+    ID[Insight Delivery Context]
+    FE[Feedback & Evaluation Context]
 
-    EV --> DI
-    MD --> DI
-    PW --> DI
-    DQ --> DI
-    DI --> AX
-    FB --> EVAL
-    DI --> EVAL
-    EVAL --> DI
+    %% Future/later
+    RO[Recommendation & Optimization Context]
+    BI[Broker Integration Context]
+    EX[Execution Context]
+
+    %% External dependencies
+    AUTH --> UA
+    MDP --> MDI
+    EDP --> EI
+    BP --> BI
+
+    %% Data foundation
+    AR --> IC
+    AR --> MDI
+    AR --> MDS
+    MDI --> DQ
+    DQ --> MDS
+
+    %% Portfolio foundation
+    UA --> IC
+    IC --> PA
+    MDS --> PA
+
+    %% Core intelligence flow
+    EI --> R
+    IC --> R
+    AR --> R
+    PA --> R
+    MDS --> IA
+    R --> IA
+    EI --> IA
+    IA --> ID
+    R --> ID
+    PA --> ID
+    IC --> ID
+    TG --> ID
+
+    %% Delivery and feedback
+    ID --> N
+    ID --> FE
+    N --> FE
+    FE --> R
+    FE --> IA
+    FE --> ID
+
+    %% Future recommendation/execution
+    IA --> RO
+    PA --> RO
+    IC --> RO
+    TG --> RO
+    RO --> EX
+    BI --> EX
+    TG --> EX
+    BP --> EX
+
+    %% Broker sync back to investing context
+    BI --> IC
+
+    %% Operations observes all
+    PO -. observes .-> MDI
+    PO -. observes .-> DQ
+    PO -. observes .-> MDS
+    PO -. observes .-> EI
+    PO -. observes .-> ID
+    PO -. observes .-> EX
+
 ```

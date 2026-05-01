@@ -1,14 +1,14 @@
 # ADR 0004: Use Modular Monolith with Separate Batch Ingestion Jobs
 
-| Metadata          | Value                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| **Date**          | 2026-04-30                                                                            |
-| **Author**        | @barto-official                                                                       |
-| **Status**        | `Proposed`                                                                            |
-| **Tags**          | architecture, architecture-style, modular-monolith, batch-ingestion, c2               |
+| Metadata          | Value                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Date**          | 2026-04-30                                                                                                 |
+| **Author**        | @barto-official                                                                                            |
+| **Status**        | `Proposed`                                                                                                 |
+| **Tags**          | architecture, architecture-style, modular-monolith, batch-ingestion, c2                                    |
 | **Related**       | `docs/architecture/0002-system-context.md`, `docs/architecture/diagrams/c2-target-architecture.drawio.svg` |
-| **Supersedes**    | N/A                                                                                   |
-| **Superseded by** | N/A                                                                                   |
+| **Supersedes**    | N/A                                                                                                        |
+| **Superseded by** | N/A                                                                                                        |
 
 ## 1) Context & Problem Statement
 
@@ -30,8 +30,8 @@ We will start with a **modular monolith** for product-facing backend capabilitie
 
 ### Decision Details
 
-
 Modular monolith with separate batch ingestion jobs — one deployable backend application, but internally organized by domain modules. Each module owns its domain concepts and exposes explicit interfaces to other modules. Data ingestion (batch and streaming) might be based on event-driven and still live in the same repository.
+
 - We will implement the product-facing backend as one deployable application.
 - Internal modules will represent domain boundaries.
 - We will run ingestion outside the request/response path.
@@ -40,7 +40,7 @@ Modular monolith with separate batch ingestion jobs — one deployable backend a
 - We will defer microservices.
 - We will design module boundaries so future extraction remains possible.
 
-| Need                                           | Why it fits the requirements             |
+| Need                                           | Why it fits the requirements          |
 | ---------------------------------------------- | ------------------------------------- |
 | Fast iteration                                 | One backend deployable                |
 | Clear domain boundaries                        | Modules align with DDD-light contexts |
@@ -62,7 +62,6 @@ Modular monolith with separate batch ingestion jobs — one deployable backend a
 
 <img src="../diagrams/c2-target-architecture.drawio.svg" alt="C1 target system context" width="1000" />
 
-
 ### Why this option
 
 A modular monolith gives clear boundaries with low operational complexity. Separate ingestion jobs keep long-running data workflows out of user-facing API paths. This fits the current project stage while preserving an evolution path toward services later.
@@ -77,8 +76,9 @@ A modular monolith gives clear boundaries with low operational complexity. Separ
 ## 4) Options Considered
 
 1. Layered Monolith — a single backend application organized mostly by technical layers. It is simple, familiar, fast to start, and easy to deploy.
-  * It's not suitable because our domains are fairly independent and they matter more than generic technical layers
-  * If everything is organized as generic services/ and repositories/, the system can easily become a “service soup” where domain ownership is unclear.
+
+- It's not suitable because our domains are fairly independent and they matter more than generic technical layers
+- If everything is organized as generic services/ and repositories/, the system can easily become a “service soup” where domain ownership is unclear.
 
 2. Microservices — Each major domain becomes an independently deployed service. Although professional and fit the distribution of our domains, it's a technical overkill at the beginning. It makes sense to switch to microservices only if we need:
 
@@ -93,21 +93,20 @@ A modular monolith gives clear boundaries with low operational complexity. Separ
 
 Full microservices from the start would add:
 
-* network failures
-* service discovery
-* distributed tracing
-* contract versioning
-* distributed transactions
-* cross-service authorization
-* more deployment pipelines
-* more observability complexity
-* harder local development
-
+- network failures
+- service discovery
+- distributed tracing
+- contract versioning
+- distributed transactions
+- cross-service authorization
+- more deployment pipelines
+- more observability complexity
+- harder local development
 
 3. Coarse-grained services / SOA-like architecture. A middle ground between modular monolith and microservices. Instead of many tiny services, we split into a few major runtime units. It separates fundamentally different runtime concerns. The risk is that we over-split too early and will have a hard time refactoring later. **Best target architecture when scaling is needed**
 
-4. Event-driven architecture — Parts of the system communicate by producing and consuming events. It's especially useful for moving parts with data, such as data ingestion, notification requests, feedback loops. However, it requires mature handling of event schemas, idempotency, ordering, retries, dead-letter queues, replay, deduplication, observability, schema evolution
-event versioning.
+1. Event-driven architecture — Parts of the system communicate by producing and consuming events. It's especially useful for moving parts with data, such as data ingestion, notification requests, feedback loops. However, it requires mature handling of event schemas, idempotency, ordering, retries, dead-letter queues, replay, deduplication, observability, schema evolution
+   event versioning.
 
 If introduced too early, we may spend more time building event plumbing than product/data foundation. Thus, **use selectively, only in parts when it makes the most sense**
 
