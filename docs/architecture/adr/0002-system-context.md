@@ -22,41 +22,166 @@ The architecture needs a clear boundary that answers:
 - Which external dependencies are current versus future/deferred?
 - How do we prevent future-facing context diagrams from creating MVP scope creep?
 
+## 2) Decision
+
 The Market Intelligence Platform helps active retail investors maintain investing context
 and eventually translate market, news, and geopolitical events into portfolio-aware,
-risk-aware insights.
+risk-aware insights. The solution will be built iteratively but the first architecture and system scope should be defined up-front for better planning and scaling of the project.
 
-The long-term platform includes:
+The plan for the release cycle include:
 
-- market data ingestion
-- portfolio/watchlist context
-- event/news/geopolitical ingestion
-- event-to-asset relevance
-- impact scoring
-- explainability and provenance
-- feedback/evaluation loops
-- later recommendations or automation
+**Version 0.0.1 —** Foundation Portfolio + Historical Equity Data
 
-The current architecture work focuses on the foundation required for the first
-usable slice: market data ingestion, asset universe, portfolio/watchlist context,
-basic market metrics, and data correctness feedback.
+- Data:
+  - Batch & Historical Data Ingestion (only equities): Price
+  - Analytical and Operational Databases
+- Application:
+  - Portfolio & Watchlist management
+  - Authorization & Authentication
+  - Minimal user account
+- Analytics:
+  - Dashboard with Historical Data based on portfolio
+- Operations:
+  - Structured logging
 
-Relevant forces:
+**Version 0.0.2** — Expanded Batch Data + Governance
 
-- **Product scope:** Long-term vision includes data, portfolio context, insights, recommendations, and possible broker interactions.
-- **Current implementation scope:** First slices remain narrower: market data foundation, asset universe, portfolio/watchlist context, data quality, API/dashboard basics.
-- **Compliance/security constraints:** Broker execution, recommendations, and automation may introduce regulated workflows and must not be implied as current implementation.
-- **Team constraints:** Personal project operated initially by one developer; architecture must remain disciplined but not overcomplicated.
-- **Maintainability constraint:** Internal modularity should be preserved without prematurely splitting the platform into multiple top-level systems.
-- **Scope-control constraint:** Target-state dependencies must be separated from MVP implementation commitments.
+- Data:
+  - Batch & Historical Data Ingestion (equities, commodities, crypto): financial metrics, earnings, other dimension data (tbd),
+  - Batch & Historical Data Ingestion (commodities, crypto): price
+  - Data Quality & Governance
+- Application
+  - Improved User Account Management
+- Analytics:
+  - Improved dashboard with metrics and asset detail views
 
-## 2) Out Of Scope
+**Version 0.0.3** — Multi-Asset Batch Analytics
+
+- Data:
+  - Batch & Historical Data Ingestion (other assets): price, financial metrics, earnings, other dimension data (tbd)
+  - Ingestion of Geopolitical Data & Events
+- Analytics
+  - Real-time dashboard
+  - Cross-asset dashboard
+  - Portfolio exposure by asset class
+  - Basic historical analytics
+
+**Version 0.0.4** — Real-Time Price Foundation
+
+- Data:
+  - Real-Time price ingestion of existing assets
+- Analytics:
+  - Real-time dashboard
+- Operations:
+  - Real-time ingestion monitoring
+  - Alerts for stale streams and ingestion failures
+
+**Version 0.0.4** — News & Geopolitical Event Ingestion
+
+- Data:
+
+  - Geopolitical data ingestion
+  - News/event ingestion
+  - Event taxonomy
+  - Event quality/status metadata
+
+- Analytics:
+
+  - Event timeline
+  - Basic event filtering
+  - Basic asset/event tagging where reliable
+
+Version 0.0.6 — Event Relevance & Notifications
+
+- Analytics & Insights:
+
+  - Event-to-asset relevance v1
+  - Portfolio/watchlist relevance matching
+  - Basic event explanations
+  - Source links and confidence labels
+
+- Application:
+
+  - Price volatility notifications
+  - Geopolitical/event notifications
+  - Notification preferences
+
+- Feedback:
+
+  - Relevant / not relevant feedback
+  - Data/event issue feedback
+
+**Version 1.0.0 — Decision Intelligence v1**
+
+- Analytics & Insights:
+
+  - Batch price forecasting v1
+  - Geopolitical/event impact assessment v1
+  - Portfolio-aware risk narratives
+  - Explanation and source traceability
+  - Confidence/uncertainty communication
+  - Evaluation dashboards
+  - Calibration tracking
+
+- Feedback:
+
+  - Feedback loop for relevance and trust
+  - Outcome tracking for insights
+
+- Operations:
+
+  - Production-grade observability
+  - Tracing
+  - Runbooks
+  - Alerting
+
+**Version 1.1.0 — Portfolio Optimization v1**
+
+- Analytics & Insights:
+  - Portfolio optimization v1
+  - Scenario-based portfolio analysis
+  - Risk/return trade-off views
+  - Constraints and user preferences
+  - Paper recommendations only
+  - No automatic broker execution
+
+**Version 1.2.0 — Broker Integration / Paper Trading**
+
+- Application:
+
+  - Broker account connection
+  - Holdings sync
+  - Transaction import
+  - Paper trade simulation
+  - Trade intent model
+  - User confirmation flow
+
+- Trust & Compliance:
+
+  - Audit trail
+  - Execution disclaimers
+  - Kill switch
+  - Order preview
+  - Risk warnings
+
+**Version 2.0.0 — Semi-Automated Trading**
+
+- Execution
+  - Broker order submission
+  - User-approved trade execution
+  - Strict audit trail
+  - Rollback/failure handling
+  - Execution monitoring
+  - Automation gates
+  - LLM-based trading
+
+## 3) Out Of Scope
 
 - HFT execution infrastructure (colocation, ultra-low-latency order routing, microstructure optimizations)
 - “Guaranteed returns” positioning or anything resembling it
 - Full multi-asset coverage (start with equities/ETFs; add others only after quality is proven)
 - Complex derivatives strategy automation before compliance, risk controls, and user sophistication gates
-- Building a full broker-dealer stack from scratch (prefer partnerships/integrations initially)
+- Building a full broker-dealer stack from scratch (prefer partnerships/integrations)
 
 ## 3) Principles & Trade-offs
 
@@ -314,7 +439,7 @@ Priorities:
 - Trade-offs
   - Slower path to “full autonomy,” higher trust and lower reputational risk.
 
-## 5) Decision & Design
+## 5) Design
 
 We will name the target system **Market Intelligence Platform** in the C1 System Context diagram.
 
@@ -330,25 +455,7 @@ We will name the target system **Market Intelligence Platform** in the C1 System
 
 - **Out of scope:**
 
-  - Backend framework choice
-  - Database choice
-  - Ingestion architecture
-  - Microservices versus modular monolith decision
-  - Market data provider selection
-  - Auth provider selection
-  - Observability vendor/tooling choice
-  - Broker API selection
-  - Model/LLM provider selection
-  - Notification provider selection
-  - Runtime container design
-  - Deployment topology
-
-- **Assumptions:**
-
-  - The platform may eventually support insights, recommendations, feedback loops, and broker-related workflows.
-  - The first implementation slices remain focused on market data, portfolio/watchlist context, and data quality.
-  - External systems may change, but their categories are stable enough to include in the target C1 context.
-  - Future execution/automation capabilities require additional architectural, product, compliance, and safety gates.
+  - Decision on Tooling
 
 - **Non-goals:**
 
