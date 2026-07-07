@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
               Please create an RFC using the template in
-              [docs/rfc](https://github.com/ORG/REPO/tree/main/docs/rfc).
+              [docs/rfc](https://github.com/barto-official/market-intelligence-platform/tree/main/docs/rfc).
 
               In this Issue, please link your file.
 

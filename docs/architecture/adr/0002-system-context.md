@@ -76,7 +76,7 @@ The plan for the release cycle include:
   - Real-time ingestion monitoring
   - Alerts for stale streams and ingestion failures
 
-**Version 0.0.4** — News & Geopolitical Event Ingestion
+**Version 0.0.5** — News & Geopolitical Event Ingestion
 
 - Data:
 
@@ -91,7 +91,7 @@ The plan for the release cycle include:
   - Basic event filtering
   - Basic asset/event tagging where reliable
 
-Version 0.0.6 — Event Relevance & Notifications
+**Version 0.0.6 — Event Relevance & Notifications**
 
 - Analytics & Insights:
 
@@ -183,7 +183,7 @@ Version 0.0.6 — Event Relevance & Notifications
 - Complex derivatives strategy automation before compliance, risk controls, and user sophistication gates
 - Building a full broker-dealer stack from scratch (prefer partnerships/integrations)
 
-## 3) Principles & Trade-offs
+## 4) Principles & Trade-offs
 
 **User Success over Feature Breadth**
 
@@ -239,7 +239,7 @@ Insights before automation
 - How: Set-up the infrastructure to enable quickly test and deploy new features in multiple environments
 - Deprioritizes: Perfect, scalable infrastructure and omission of testing.
 
-## 4) Quality Attributes & Guardrails
+## 5) Quality Attributes & Guardrails
 
 *Tiers express required rigor, not implementation order.*
 
@@ -439,7 +439,7 @@ Priorities:
 - Trade-offs
   - Slower path to “full autonomy,” higher trust and lower reputational risk.
 
-## 5) Design
+## 6) Design
 
 We will name the target system **Market Intelligence Platform** in the C1 System Context diagram.
 

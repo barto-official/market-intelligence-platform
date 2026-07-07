@@ -1,9 +1,8 @@
-# CHOOSE ONLY One ReadME. THIS ONE IS FOR BACKEND OR INTERNAL FACING REPOS. DELETE THE ONE YOU DON"T USE AND CHANGE THE NAME TO README.MD
+# Market Intelligence Platform
 
-# Project Name
-
-Short description (one sentence).
-What does it do? Who is it for? What problem does it solve?
+The Market Intelligence Platform helps active retail investors maintain investing context
+and eventually translate market, news, and geopolitical events into portfolio-aware,
+risk-aware insights.
 
 ## Overview
 
