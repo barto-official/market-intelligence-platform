@@ -48,11 +48,11 @@ quality:
 	# 2. Run lint
 	ruff check $(SRC_DIR) $(TEST_DIR)
 
-	# 3. Type-checking (pyright or mypy)
-	#pyright || mypy $(SRC_DIR) || true
+	# 3. Type-checking with ty
+	uv run ty check
 
-	# 4. Run unit tests
-	#pytest -q
+	# 4. Run unit tests with coverage
+	uv run pytest -q --cov=mip --cov-report=term-missing
 
 	# 5. Dependency vulnerability scanning
 	#pip-audit || true

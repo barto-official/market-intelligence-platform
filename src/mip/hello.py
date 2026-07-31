@@ -85,7 +85,7 @@ def slugify(text: str, *, max_length: int = 64) -> str:
     return out[:max_length].strip("-")
 
 
-def chunked(items: Sequence[T], size: int) -> list[list[T]]:
+def chunked[T](items: Sequence[T], size: int) -> list[list[T]]:
     """Split a sequence into fixed-size chunks.
 
     Args:
@@ -108,7 +108,7 @@ def chunked(items: Sequence[T], size: int) -> list[list[T]]:
     return [list(items[i : i + size]) for i in range(0, len(items), size)]
 
 
-def merge_maps(*maps: Mapping[K, V], conflict: str = "right") -> dict[K, V]:
+def merge_maps[K, V](*maps: Mapping[K, V], conflict: str = "right") -> dict[K, V]:
     """Merge multiple mappings into one dict.
 
     Args:
@@ -277,8 +277,12 @@ class TTLCache(Iterable[tuple[str, Any]]):
             self._data.pop(k, None)
         return len(to_delete)
 
-    def __iter__(self) -> Iterator[tuple[str, Any]]:  # noqa: D
-        """Iterate over unexpired items as ``(key, value)`` pairs."""
+    def __iter__(self) -> Iterator[tuple[str, Any]]:
+        """Iterate over unexpired items as ``(key, value)`` pairs.
+
+        Yields:
+            Key/value pairs for items that have not expired.
+        """
 
         # Note: intentionally not purging; docs can describe this nuance.
         for k, (_, v) in self._data.items():
@@ -422,5 +426,9 @@ class TaskManager:
         return len(self._tasks)
 
     def __iter__(self) -> Iterator[Task]:
-        """Iterate over tasks in insertion order."""
+        """Iterate over tasks in insertion order.
+
+        Returns:
+            An iterator over tasks in insertion order.
+        """
         return iter(self._tasks)

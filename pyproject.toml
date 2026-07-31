@@ -1,35 +1,37 @@
 [build-system]
-requires = ["uv_build>=0.11.7,<0.12"]
+requires = ["uv_build>=0.12.0,<0.13"]
 build-backend = "uv_build"
 
 [project]
-requires-python = ">=3.11"
-name = "PROJECT_NAME"
+requires-python = ">=3.12"
+name = "mip"
 version = "0.1.0"
-description = "PROJECT_DESCRIPTION"
+description = "Market Intelligence Platform"
 readme = "README.md"
 license = "MIT"
-license-files = ["LICENSE"]authors = [ { name = "Bartosz Rzycki", email = "bartosz.rzycki@gmail.com" }, ]
+license-files = ["LICENSE"]
+authors = [ { name = "Bartosz Rzycki", email = "bartosz.rzycki@gmail.com" }, ]
 dependencies = []
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Operating System :: OS Independent",
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourname/my-package"
-Repository = "https://github.com/yourname/my-package"
-Documentation = "https://your-docs-site"
-Issues = "https://github.com/yourname/my-package/issues"
+Homepage = "https://github.com/barto-official/market-intelligence-platform"
+Repository = "https://github.com/barto-official/market-intelligence-platform"
+Documentation = "https://barto-official.github.io/market-intelligence-platform/latest/"
+Issues = "https://github.com/barto-official/market-intelligence-platform/issues"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.6",
-    "mypy>=1.10",
+    "ruff==0.16.1",
     "pytest>=8.2",
+    "pytest-cov>=6.0",
+    "ty>=0.0.1",
     "codespell>=2.3",
-    "pre-commit>4.0",
+    "commitizen>=4.17",
 ]
 docs = [
     "mkdocs>=1.6",
@@ -49,18 +51,12 @@ docs = [
 source-include = ["tests/**"]
 wheel-exclude = ["tests/**"]
 
-#if using setuptools
-#[tool.setuptools]
-#package-dir = {"" = "src"}
-#packages = ["my_package"] if you want manual package discovery
-#[tool.setuptools.packages.find]
-#where = ["src"]
 
 ################################################################################
 # RUFF CONFIGURATION
 ################################################################################
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 100
 src = ["src", "tests"]
 
@@ -183,6 +179,18 @@ max-complexity = 10
 "alembic/**" = ["D"]
 
 ################################################################################
+# Commitizen settings
+################################################################################
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "v$version"
+update_changelog_on_bump = true
+version_provider = "uv"
+version_scheme  = "semver2"
+major_version_zero = true
+
+
+################################################################################
 # FORMATTER SETTINGS
 ################################################################################
 [tool.ruff.format]
@@ -198,8 +206,33 @@ skip-magic-trailing-comma = false
 docstring-code-format = true
 
 [tool.ruff.lint.isort]
-known-first-party = ["my_package"]
+known-first-party = ["mip"]
 
 [tool.mdformat]
 wrap = 100
 number = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers -ra"
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["mip"]
+omit = ["*/hello.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = ["src"]
+
+[[tool.ty.overrides]]
+include = ["tests/**"]
+
+[tool.ty.overrides.rules]
+possibly-unresolved-reference = "ignore"

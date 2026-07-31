@@ -1,0 +1,43 @@
+# Creates a GitHub Release from the Commitizen CHANGELOG section for the pushed tag.
+# Triggered by version-bump.yaml (via GitHub App token tag push).
+# No PyPI publish, no wheel artifacts.
+
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Prepare release notes from CHANGELOG
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## v" ver " " { found=1; print; next }
+            found {
+              if ($0 ~ "^## v") exit
+              print
+            }
+          ' CHANGELOG.md > release_notes.md
+          if [[ ! -s release_notes.md ]]; then
+            echo "No CHANGELOG section found for ${{ github.ref_name }}"
+            exit 1
+          fi
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          body_path: release_notes.md

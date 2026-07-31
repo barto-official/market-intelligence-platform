@@ -4,7 +4,7 @@ This reference is generated from Python docstrings via mkdocstrings (griffe).
 
 ## Core
 
-::: my_package
+::: mip
 options:
 show_members: true
 members_order: source
