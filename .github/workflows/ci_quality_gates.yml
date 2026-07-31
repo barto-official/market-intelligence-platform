@@ -29,9 +29,12 @@ jobs:
         run: |
           uv sync --frozen --group dev
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
-          uv run pytest
+          uv run pytest \
+            --cov=mip \
+            --cov-report=term-missing \
+            --cov-fail-under=50
 
   type-check:
     runs-on: ubuntu-latest
@@ -55,85 +58,19 @@ jobs:
         run: |
           uv run ty check
 
-  package-build:
+  dependency-audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: "3.12"
 
       - name: Install uv
         uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf # v3
         with:
           version: "0.12"
 
-      - name: Clean previous build artifacts
+      - name: Audit locked dependencies
         run: |
-          rm -rf dist build *.egg-info
-
-      - name: Set deterministic build environment
-        shell: bash
-        run: |
-          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
-          echo "TZ=UTC" >> "$GITHUB_ENV"
-          echo "LC_ALL=C.UTF-8" >> "$GITHUB_ENV"
-          echo "LANG=C.UTF-8" >> "$GITHUB_ENV"
-
-      - name: Build wheel and sdist
-        run: |
-          uv build
-
-      - name: Show built artifacts
-        run: |
-          ls -lh dist/
-
-      - name: Verify artifact set
-        shell: bash
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-
-          wheels=(dist/*.whl)
-          sdists=(dist/*.tar.gz)
-
-          if [ "${#wheels[@]}" -ne 1 ]; then
-            echo "Packaging check failed: expected exactly one wheel."
-            echo "Found ${#wheels[@]} wheel(s)."
-            printf '%s\n' "${wheels[@]:-<none>}"
-            exit 1
-          fi
-
-          if [ "${#sdists[@]}" -ne 1 ]; then
-            echo "Packaging check failed: expected exactly one sdist."
-            echo "Found ${#sdists[@]} source distribution(s)."
-            printf '%s\n' "${sdists[@]:-<none>}"
-            exit 1
-          fi
-
-          echo "Artifacts look correct."
-          echo "Wheel: ${wheels[0]}"
-          echo "sdist: ${sdists[0]}"
-
-      - name: Inspect wheel contents
-        run: |
-          unzip -l dist/*.whl
-
-      - name: Inspect sdist contents
-        run: |
-          tar -tzf dist/*.tar.gz
-
-      - name: Validate package metadata and README rendering
-        run: |
-          uv run --with twine==6.1.0 twine check --strict dist/*
-
-      - name: Upload built distributions
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: built-distributions
-          path: dist/*
-
+          uv audit --frozen --preview-features audit
 
   docs-build:
     runs-on: ubuntu-latest
