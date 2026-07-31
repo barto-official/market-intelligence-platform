@@ -3,7 +3,12 @@
     "strict": true,
     "contexts": [
       "CodeQL",
-      "CI"
+      "prek",
+      "tests (3.12)",
+      "tests (3.13)",
+      "tests (3.14)",
+      "type-check",
+      "docs-build"
     ]
   },
   "enforce_admins": false,

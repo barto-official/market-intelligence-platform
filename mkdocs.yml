@@ -1,8 +1,7 @@
-site_name: Your Package
-site_description: Project documentation
-repo_url: "REPO_URL"
-repo_name: "YOUR_REPO"
-edit_uri: "uri" # e.g., "edit/main/docs/"
+site_name: Market Intelligence Platform
+site_url: https://barto-official.github.io/market-intelligence-platform/
+repo_url: https://github.com/barto-official/market-intelligence-platform
+edit_uri: edit/main/docs/
 
 theme:
   palette:
@@ -72,6 +71,7 @@ markdown_extensions:
 
 
 plugins:
+  - mike
   - search                     # Enables MkDocs built-in full-text search
   - autorefs                   # Automatically creates cross-references for headings and objects
   - mkdocstrings:              # Plugin for generating documentation from docstrings
@@ -117,7 +117,7 @@ nav:
       - Getting started: guides/getting_started.md
   - Reference:
       - Overview: reference/index.md
-      - my_package: reference/my_package.md
+      - mip: reference/mip.md
 
 validation:
   nav:
@@ -127,3 +127,8 @@ validation:
     anchors: warn
     absolute_links: warn
     unrecognized_links: warn
+
+extra:
+  version:
+    provider: mike
+    aliases: true
