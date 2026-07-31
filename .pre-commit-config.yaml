@@ -50,7 +50,7 @@ repos:
     rev: 0.7.17
     hooks:
       - id: mdformat
-        exclude: ^(CONTRIBUTING\.md|docs/architecture/adr/index.md |docs/rfc/index.md)$
+        exclude: ^(CONTRIBUTING\.md|docs/architecture/adr/index\.md|docs/rfc/index\.md)$
         additional_dependencies:
           - mdformat-gfm==0.3.6
 
