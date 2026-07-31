@@ -51,8 +51,8 @@ quality:
 	# 3. Type-checking with ty
 	uv run ty check
 
-	# 4. Run unit tests
-	uv run pytest -q
+	# 4. Run unit tests with coverage
+	uv run pytest -q --cov=mip --cov-report=term-missing
 
 	# 5. Dependency vulnerability scanning
 	#pip-audit || true
