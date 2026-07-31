@@ -1,14 +1,14 @@
 # ADR 0003: Modular Monolith, Batch Ingestion, and Hexagonal Codebase Architecture
 
-| Metadata          | Value                                                                                                      |
-| ----------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Date**          | 2026-04-30                                                                                                 |
-| **Author**        | @barto-official                                                                                            |
-| **Status**        | `Proposed`                                                                                                 |
-| **Tags**          | architecture, architecture-style, modular-monolith, hexagonal     |
+| Metadata          | Value                                                                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Date**          | 2026-04-30                                                                                                                                                 |
+| **Author**        | @barto-official                                                                                                                                            |
+| **Status**        | `Proposed`                                                                                                                                                 |
+| **Tags**          | architecture, architecture-style, modular-monolith, hexagonal                                                                                              |
 | **Related**       | `docs/architecture/adr/0002-system-context.md`, `docs/architecture/diagrams/c2-target-architecture.drawio.svg`, `docs/architecture/domain/ddd-exercise.md` |
-| **Supersedes**    | N/A                                                                                                        |
-| **Superseded by** | N/A                                                                                                        |
+| **Supersedes**    | N/A                                                                                                                                                        |
+| **Superseded by** | N/A                                                                                                                                                        |
 
 ## 1) Context & Problem Statement
 
@@ -37,6 +37,7 @@ We will start with a **modular monolith** for product-facing backend capabilitie
 ### Runtime Architecture
 
 The product-facing backend is one deployable application, internally organized by domain modules aligned with bounded contexts. Each module owns its domain concepts and exposes explicit interfaces to other modules.
+
 - We will implement the product-facing backend as one deployable application.
 - Internal modules will represent domain boundaries.
 - We will use batch ingestion as the default ingestion mode.
@@ -52,7 +53,6 @@ The product-facing backend is one deployable application, internally organized b
 | Future extraction path                         | Modules can later become services     |
 | Easier local development                       | One backend app + workers             |
 | Stronger maintainability than layered monolith | Domain-oriented code organization     |
-
 
 ### Decision Scope
 
@@ -96,9 +96,9 @@ This decision does not foreclose Clean Architecture. Hexagonal modules can evolv
 **Evolution of internal layering**
 
 1. **Start (now):** Hexagonal modules with domain, ports, and adapters. Add application services only where orchestration exceeds what a single port method can express cleanly.
-2. **Grow (per module):** When a context accumulates multi-step workflows, branching policies, or cross-aggregate coordination (e.g. insight generation, impact assessment, execution readiness), extract an explicit **application/use-case layer** between primary ports and the domain. Primary adapters call use cases; use cases call domain entities and secondary ports. This is Clean Architecture applied locally, not globally.
-3. **Mature (selective):** Contexts with heavy orchestration, audit requirements, or multiple teams may adopt full Clean layering (entities, use cases, presenters, gateways). Simpler contexts remain hexagonal. The monolith becomes a **heterogeneous modular structure** — hexagonal by default, Clean where earned.
-4. **Extract (if needed):** When a module is extracted to a separate service, its ports become the service's public contract. The internal layering choice (hexagonal or Clean) travels with the module; extraction does not require a global rewrite.
+1. **Grow (per module):** When a context accumulates multi-step workflows, branching policies, or cross-aggregate coordination (e.g. insight generation, impact assessment, execution readiness), extract an explicit **application/use-case layer** between primary ports and the domain. Primary adapters call use cases; use cases call domain entities and secondary ports. This is Clean Architecture applied locally, not globally.
+1. **Mature (selective):** Contexts with heavy orchestration, audit requirements, or multiple teams may adopt full Clean layering (entities, use cases, presenters, gateways). Simpler contexts remain hexagonal. The monolith becomes a **heterogeneous modular structure** — hexagonal by default, Clean where earned.
+1. **Extract (if needed):** When a module is extracted to a separate service, its ports become the service's public contract. The internal layering choice (hexagonal or Clean) travels with the module; extraction does not require a global rewrite.
 
 Revisit the internal architecture style per module when: orchestration logic spreads into adapters, domain tests require increasingly heavy setup, or a context gains a dedicated sub-team. Until those triggers fire, the default remains hexagonal.
 
@@ -117,17 +117,18 @@ Revisit the internal architecture style per module when: orchestration logic spr
 
 1. **Layered monolith** — a single backend application organized mostly by technical layers (`controllers/`, `services/`, `repositories/`). Simple, familiar, fast to start, and easy to deploy. Not suitable here because our domains are fairly independent and matter more than generic technical layers. If everything is organized as generic services and repositories, the system can easily become a "service soup" where domain ownership is unclear.
 
-2. **Microservices** — each major domain becomes an independently deployed service. Professional and aligned with domain distribution, but technical overkill at the beginning. Switch to microservices only when independent scaling, reliability isolation, team ownership, deployment cadence, compliance boundaries, or traffic patterns require it.
-| Trigger                      | Example                                             |
-| ---------------------------- | --------------------------------------------------- |
-| Independent scaling          | inference service needs GPUs; backend does not      |
-| Different reliability needs  | broker execution needs stricter isolation           |
-| Different team ownership     | data/ML team owns models; app team owns UX/backend  |
-| Different deployment cadence | model inference deploys separately                  |
-| Strong compliance boundary   | execution must be separated from insight generation |
-| High traffic domain          | market data serving needs separate scaling          |
+1. **Microservices** — each major domain becomes an independently deployed service. Professional and aligned with domain distribution, but technical overkill at the beginning. Switch to microservices only when independent scaling, reliability isolation, team ownership, deployment cadence, compliance boundaries, or traffic patterns require it.
+   | Trigger                      | Example                                             |
+   | \---------------------------- | --------------------------------------------------- |
+   | Independent scaling          | inference service needs GPUs; backend does not      |
+   | Different reliability needs  | broker execution needs stricter isolation           |
+   | Different team ownership     | data/ML team owns models; app team owns UX/backend  |
+   | Different deployment cadence | model inference deploys separately                  |
+   | Strong compliance boundary   | execution must be separated from insight generation |
+   | High traffic domain          | market data serving needs separate scaling          |
 
 Full microservices from the start would add:
+
 - network failures
 - service discovery
 - distributed tracing
@@ -140,17 +141,17 @@ Full microservices from the start would add:
 
 3. **Coarse-grained services / SOA-like architecture** — a middle ground between modular monolith and microservices: a few major runtime units instead of many tiny services. Separates fundamentally different runtime concerns but risks over-splitting too early and making later refactoring harder. Best target runtime architecture when scaling triggers are met.
 
-4. **Event-driven architecture** — parts of the system communicate by producing and consuming events. Especially useful for data ingestion, notification requests, and feedback loops. However, it requires mature handling of event schemas, idempotency, ordering, retries, dead-letter queues, replay, deduplication, observability, and schema evolution. If introduced too early, we may spend more time building event plumbing than product and data foundation. **Use selectively, only in parts where it makes the most sense.**
+1. **Event-driven architecture** — parts of the system communicate by producing and consuming events. Especially useful for data ingestion, notification requests, and feedback loops. However, it requires mature handling of event schemas, idempotency, ordering, retries, dead-letter queues, replay, deduplication, observability, and schema evolution. If introduced too early, we may spend more time building event plumbing than product and data foundation. **Use selectively, only in parts where it makes the most sense.**
 
 ### Codebase architecture options
 
 1. **Hexagonal Architecture / Ports & Adapters per bounded context (chosen)** — organize by domain module first; inside each module, domain at the center with explicit ports and adapters. Primary adapters for HTTP, batch jobs, and later event consumers; secondary adapters for databases and external providers. Pros: natural anti-corruption layers, multiple entry points without duplicated logic, testable domain core, low ceremony for simple modules, aligns with Python conventions. Cons: requires discipline to keep adapters thin and ports stable; shared kernel can become a coupling point if allowed to grow unchecked.
 
-2. **Clean Architecture globally** — apply concentric layers (entities → use cases → interface adapters → frameworks) uniformly across all modules. Pros: strong separation of concerns, explicit use-case classes, scales well for complex orchestration and larger teams. Cons: high upfront ceremony for a small team; empty or trivial use-case classes in simple CRUD contexts; rigid folder taxonomy that may slow early iteration; less natural fit for Python project conventions. Better adopted selectively inside complex modules later than as a global day-one standard.
+1. **Clean Architecture globally** — apply concentric layers (entities → use cases → interface adapters → frameworks) uniformly across all modules. Pros: strong separation of concerns, explicit use-case classes, scales well for complex orchestration and larger teams. Cons: high upfront ceremony for a small team; empty or trivial use-case classes in simple CRUD contexts; rigid folder taxonomy that may slow early iteration; less natural fit for Python project conventions. Better adopted selectively inside complex modules later than as a global day-one standard.
 
-3. **Layered monolith (codebase)** — same as runtime layered monolith but at code level: organize primarily by technical layer rather than domain. Pros: fastest initial scaffolding. Cons: domain ownership obscured, cross-cutting changes touch many layers, harder to extract modules or swap providers, directly conflicts with DDD-light bounded context strategy. Rejected.
+1. **Layered monolith (codebase)** — same as runtime layered monolith but at code level: organize primarily by technical layer rather than domain. Pros: fastest initial scaffolding. Cons: domain ownership obscured, cross-cutting changes touch many layers, harder to extract modules or swap providers, directly conflicts with DDD-light bounded context strategy. Rejected.
 
-4. **Flat feature folders without ports** — organize by feature but allow direct imports of ORM models, HTTP clients, and provider SDKs from anywhere. Pros: fastest to write first code. Cons: provider schema leakage, untestable domain logic, tight coupling that makes future hexagonal or Clean migration expensive. Rejected for trust-critical and provider-heavy domains; acceptable only for throwaway spikes outside production paths.
+1. **Flat feature folders without ports** — organize by feature but allow direct imports of ORM models, HTTP clients, and provider SDKs from anywhere. Pros: fastest to write first code. Cons: provider schema leakage, untestable domain logic, tight coupling that makes future hexagonal or Clean migration expensive. Rejected for trust-critical and provider-heavy domains; acceptable only for throwaway spikes outside production paths.
 
 ## 4) Consequences
 

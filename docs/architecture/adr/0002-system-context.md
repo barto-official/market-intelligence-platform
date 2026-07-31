@@ -35,7 +35,6 @@ risk-aware insights. The solution will be built iteratively but the first archit
 - Complex derivatives strategy automation before compliance, risk controls, and user sophistication gates
 - Building a full broker-dealer stack from scratch (prefer partnerships/integrations)
 
-
 ## 4) Design
 
 We will name the target system **Market Intelligence Platform** in the C1 System Context diagram. The C1 diagram represents the intended target system context. Inclusion of an actor or external system defines the eventual boundary and relationship, but does not commit that integration to the initial release.
