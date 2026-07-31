@@ -5,8 +5,8 @@
 | **Date**          | 2026-04-30                                                                                                 |
 | **Author**        | @barto-official                                                                                            |
 | **Status**        | `Proposed`                                                                                                 |
-| **Tags**          | architecture, architecture-style, modular-monolith, batch-ingestion, hexagonal     |
-| **Related**       | `docs/architecture/adr/0002-system-context.md`, `docs/architecture/diagrams/c2-target-architecture.drawio.svg`, `docs/architecture/adr/ddd-exercise.md` |
+| **Tags**          | architecture, architecture-style, modular-monolith, hexagonal     |
+| **Related**       | `docs/architecture/adr/0002-system-context.md`, `docs/architecture/diagrams/c2-target-architecture.drawio.svg`, `docs/architecture/domain/ddd-exercise.md` |
 | **Supersedes**    | N/A                                                                                                        |
 | **Superseded by** | N/A                                                                                                        |
 
@@ -14,13 +14,12 @@
 
 We need an initial architecture that supports clear domain boundaries without introducing unnecessary distributed-system complexity — both at **runtime** (how the system is deployed and operated) and at **codebase level** (how the application is organized internally).
 
-At runtime, the platform must serve user-facing APIs, run long-running batch ingestion pipelines, and eventually support additional entry points (notifications, streaming consumers) — all while remaining operable by a small team with low overhead.
+At runtime, the platform must serve user-facing APIs, run long-running batch ingestion pipelines, and eventually support additional entry points (notifications, streaming consumers).
 
 At codebase level, the platform integrates many external systems (market data providers, auth, and later brokers and event sources), enforces trust-critical domain rules (freshness, quality, provenance), and must remain testable and evolvable as bounded contexts grow. We need an internal structure that keeps domain logic isolated from infrastructure without imposing excessive ceremony on early delivery.
 
 **Forces:**
 
-- One developer / small-team project initially.
 - Need fast iteration and low operational overhead.
 - Need clean boundaries for future evolution — at deployment and at code level.
 - Data ingestion is a high priority — batch-only at the beginning, streaming as a later add-on.
@@ -33,15 +32,13 @@ At codebase level, the platform integrates many external systems (market data pr
 
 ### Decision Statement
 
-We will start with a **modular monolith** for product-facing backend capabilities, plus **separate batch-oriented ingestion jobs** for market data ingestion and processing. Internally, each domain module will follow **Hexagonal Architecture (Ports & Adapters)**.
+We will start with a **modular monolith** for product-facing backend capabilities. Internally, each domain module will follow **Hexagonal Architecture (Ports & Adapters)**.
 
 ### Runtime Architecture
 
-The product-facing backend is one deployable application, internally organized by domain modules aligned with bounded contexts. Each module owns its domain concepts and exposes explicit interfaces to other modules. Ingestion runs outside the request/response path as separate batch jobs (and, later, streaming consumers where justified). Data ingestion may use event-driven patterns selectively within the same repository, but the platform does not adopt event-driven architecture as its default runtime style.
-
+The product-facing backend is one deployable application, internally organized by domain modules aligned with bounded contexts. Each module owns its domain concepts and exposes explicit interfaces to other modules.
 - We will implement the product-facing backend as one deployable application.
 - Internal modules will represent domain boundaries.
-- We will run ingestion outside the request/response path.
 - We will use batch ingestion as the default ingestion mode.
 - We will defer streaming-first architecture.
 - We will defer microservices.
@@ -55,6 +52,24 @@ The product-facing backend is one deployable application, internally organized b
 | Future extraction path                         | Modules can later become services     |
 | Easier local development                       | One backend app + workers             |
 | Stronger maintainability than layered monolith | Domain-oriented code organization     |
+
+
+### Decision Scope
+
+- **In scope:** initial runtime architecture style (modular monolith), internal codebase structure (hexagonal modules per bounded context), dependency rules, adapter/port conventions, cross-module boundary strategy.
+- **Out of scope:** concrete web framework, ORM, dependency-injection library, database choice, cloud provider, auth provider, observability vendor, detailed API design.
+- **Assumptions:** first users and workloads do not require independent service scaling; bounded contexts from strategic DDD exercise guide module boundaries (see `ddd-exercise.md` for reference, not as a formal ADR).
+- **Non-goals:** no microservices, no streaming-first architecture, no broker execution architecture in the initial platform, no global Clean Architecture layering from day one.
+
+### Affected Architecture Views
+
+- `docs/architecture/diagrams/c2-target-architecture.drawio.svg`
+
+<img src="../diagrams/c2-target-architecture.drawio.svg" alt="C1 target architecture" width="1000" />
+
+### Why this option
+
+A modular monolith gives clear runtime boundaries with low operational complexity. Separate ingestion jobs keep long-running data workflows out of user-facing API paths. Hexagonal modules inside each deployable unit keep domain logic testable and provider-independent, align with anti-corruption needs, and support multiple entry points without duplicating rules. Together, this fits the current project stage while preserving evolution paths toward richer internal layering (Clean) and eventual service extraction.
 
 ### Codebase Architecture (Internal Application Set-up)
 
@@ -78,7 +93,7 @@ In short: Hexagonal gives us the isolation and testability we need now, with les
 
 This decision does not foreclose Clean Architecture. Hexagonal modules can evolve toward Clean layering **locally**, inside a bounded context, when complexity and team size justify it — without rewriting the whole codebase.
 
-A practical migration path:
+**Evolution of internal layering**
 
 1. **Start (now):** Hexagonal modules with domain, ports, and adapters. Add application services only where orchestration exceeds what a single port method can express cleanly.
 2. **Grow (per module):** When a context accumulates multi-step workflows, branching policies, or cross-aggregate coordination (e.g. insight generation, impact assessment, execution readiness), extract an explicit **application/use-case layer** between primary ports and the domain. Primary adapters call use cases; use cases call domain entities and secondary ports. This is Clean Architecture applied locally, not globally.
@@ -86,23 +101,6 @@ A practical migration path:
 4. **Extract (if needed):** When a module is extracted to a separate service, its ports become the service's public contract. The internal layering choice (hexagonal or Clean) travels with the module; extraction does not require a global rewrite.
 
 Revisit the internal architecture style per module when: orchestration logic spreads into adapters, domain tests require increasingly heavy setup, or a context gains a dedicated sub-team. Until those triggers fire, the default remains hexagonal.
-
-### Decision Scope
-
-- **In scope:** initial runtime architecture style (modular monolith + batch ingestion), internal codebase structure (hexagonal modules per bounded context), dependency rules, adapter/port conventions, cross-module boundary strategy.
-- **Out of scope:** concrete web framework, ORM, dependency-injection library, database choice, cloud provider, auth provider, observability vendor, detailed API design.
-- **Assumptions:** first users and workloads do not require independent service scaling; bounded contexts from strategic DDD exercise guide module boundaries (see `ddd-exercise.md` for reference, not as a formal ADR).
-- **Non-goals:** no microservices, no streaming-first architecture, no broker execution architecture in the initial platform, no global Clean Architecture layering from day one.
-
-### Affected Architecture Views
-
-- `docs/architecture/diagrams/c2-target-architecture.drawio.svg`
-
-<img src="../diagrams/c2-target-architecture.drawio.svg" alt="C1 target architecture" width="1000" />
-
-### Why this option
-
-A modular monolith gives clear runtime boundaries with low operational complexity. Separate ingestion jobs keep long-running data workflows out of user-facing API paths. Hexagonal modules inside each deployable unit keep domain logic testable and provider-independent, align with anti-corruption needs, and support multiple entry points without duplicating rules. Together, this fits the current project stage while preserving evolution paths toward richer internal layering (Clean) and eventual service extraction.
 
 ### Trade-offs Accepted
 
@@ -119,7 +117,7 @@ A modular monolith gives clear runtime boundaries with low operational complexit
 
 1. **Layered monolith** — a single backend application organized mostly by technical layers (`controllers/`, `services/`, `repositories/`). Simple, familiar, fast to start, and easy to deploy. Not suitable here because our domains are fairly independent and matter more than generic technical layers. If everything is organized as generic services and repositories, the system can easily become a "service soup" where domain ownership is unclear.
 
-2. **Microservices** — each major domain becomes an independently deployed service. Professional and aligned with domain distribution, but technical overkill at the beginning. Switch to microservices only when independent scaling, reliability isolation, team ownership, deployment cadence, compliance boundaries, or traffic patterns require it. Full microservices from the start would add network failures, service discovery, distributed tracing, contract versioning, distributed transactions, cross-service authorization, more deployment pipelines, more observability complexity, and harder local development.
+2. **Microservices** — each major domain becomes an independently deployed service. Professional and aligned with domain distribution, but technical overkill at the beginning. Switch to microservices only when independent scaling, reliability isolation, team ownership, deployment cadence, compliance boundaries, or traffic patterns require it.
 | Trigger                      | Example                                             |
 | ---------------------------- | --------------------------------------------------- |
 | Independent scaling          | inference service needs GPUs; backend does not      |
@@ -193,7 +191,6 @@ Full microservices from the start would add:
 1. Define backend as one modular monolith with hexagonal internal modules.
 1. Scaffold domain modules aligned with phase-one bounded contexts (user access, investing, asset registry, market data ingestion, data quality, market data serving, portfolio analytics).
 1. Establish port/adapter conventions and dependency rules in code review checklist.
-1. Create separate batch ingestion job/container reusing ingestion module adapters.
 1. Keep ingestion outside user request paths.
 1. Add domain-level tests that run without infrastructure; integration tests at adapter boundaries.
 
@@ -216,7 +213,7 @@ Full microservices from the start would add:
 - Domain tests run without database or external network for core business rules.
 - A market data provider can be replaced by changing adapters only, without domain changes.
 - Ingestion jobs do not block or degrade API requests.
-- Local development remains simple (one backend app + batch worker).
+- Local development remains simple (one backend app).
 - C2 diagram clearly separates frontend, backend, ingestion, storage, and external systems.
 - Code review can detect cross-module coupling (direct DB model imports, adapter bypass).
 
