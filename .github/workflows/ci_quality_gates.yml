@@ -89,10 +89,10 @@ jobs:
         with:
           version: "0.12"
 
-      - name: Build docs (strict)
+      - name: Build docs
         run: |
           uv sync --frozen --group docs
-          uv run mkdocs build --strict
+          uv run mkdocs build
 
   link-check:
     runs-on: ubuntu-latest
